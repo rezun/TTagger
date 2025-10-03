@@ -1,0 +1,94 @@
+/**
+ * Twitch.tv Content Script Styles - Starred Streamer Highlighting
+ *
+ * Theme-aware golden highlighting for starred streamers' avatars
+ */
+
+/*
+ * Main highlighting effect for starred streamers
+ * Uses a golden ring with glow effect that works on both dark and light themes
+ */
+.ttagger-starred {
+  position: relative !important;
+  padding: 3px !important;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%) !important;
+  border-radius: 50% !important;
+  box-sizing: content-box !important;
+}
+
+/* Subtle glow effect for better visibility */
+.ttagger-starred {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7)) !important;
+}
+
+/* Enhanced glow on hover for interactivity feedback */
+.ttagger-starred:hover {
+  filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.9)) !important;
+}
+
+/*
+ * Add golden box-shadow to the avatar image itself for extra emphasis
+ */
+.ttagger-starred .tw-image-avatar {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+  border-radius: 50% !important;
+}
+
+/* Ensure the effect works with Twitch's existing avatar styles */
+.ttagger-starred .tw-avatar {
+  position: relative;
+}
+
+/*
+ * Theme-specific adjustments
+ * Light theme: Enhanced visibility with darker gold
+ * Dark theme: More vibrant glow
+ */
+
+/* Light theme detection using Twitch's theme class */
+.tw-root--theme-light .ttagger-starred {
+  filter: drop-shadow(0 0 10px rgba(184, 134, 11, 1)) !important;
+  background: linear-gradient(135deg, #b8860b 0%, #daa520 50%, #b8860b 100%) !important;
+}
+
+.tw-root--theme-light .ttagger-starred:hover {
+  filter: drop-shadow(0 0 14px rgba(184, 134, 11, 1)) !important;
+}
+
+.tw-root--theme-light .ttagger-starred .tw-image-avatar {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+/*
+ * Accessibility: Reduce motion for users who prefer it
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ttagger-starred {
+    transition: none;
+  }
+}
+
+/*
+ * Optional: Pulse animation for extra attention
+ * Uncomment if you want a subtle pulsing effect
+ */
+/*
+@keyframes ttagger-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+  }
+}
+
+.ttagger-starred {
+  animation: ttagger-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ttagger-starred {
+    animation: none;
+  }
+}
+*/

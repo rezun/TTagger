@@ -1,0 +1,405 @@
+/**
+ * Twitch.tv Streamer Page - TTagger UI Styles
+ *
+ * Styles for star button and custom tags section on streamer pages
+ */
+
+/* Star Button Container */
+.ttagger-star-container {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.ttagger-star-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  --ttagger-star-color: #ffffff;
+}
+
+.tw-root--theme-light .ttagger-star-button {
+  --ttagger-star-color: #000000;
+}
+
+.ttagger-star-button .ScCoreButtonLabel-sc-s7h2b7-0,
+.ttagger-star-button .Layout-sc-1xcs6mc-0,
+.ttagger-star-button .InjectLayout-sc-1i43xsx-0 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ttagger-star-button svg {
+  display: block;
+}
+
+.ttagger-star-button svg path {
+  fill: var(--ttagger-star-color);
+  transition: fill 0.2s ease-in-out;
+}
+
+.ttagger-star-button:hover {
+  transform: scale(1.05);
+}
+
+.ttagger-star-button:active {
+  transform: scale(0.95);
+}
+
+.ttagger-star-button.is-starred {
+  --ttagger-star-color: #ffc107;
+}
+
+.ttagger-star-button.is-starred:hover {
+  --ttagger-star-color: #ffb300;
+}
+
+/* Tags Section */
+.ttagger-tags-section {
+  display: block;
+  width: 100%;
+  clear: both;
+  position: relative;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ttagger-tags-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.ttagger-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Tag Badges */
+.ttagger-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid;
+  white-space: nowrap;
+}
+
+/* Tag name */
+.ttagger-tag-name {
+  line-height: 1;
+}
+
+/* No tags message */
+.ttagger-no-tags {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+/* Dropdown Button */
+.ttagger-tags-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  height: 28px;
+  padding: 0 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.ttagger-tags-dropdown-btn:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ttagger-tags-dropdown-btn svg {
+  fill: currentColor;
+}
+
+/* Dropdown Menu */
+.ttagger-tags-dropdown-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 200px;
+  max-width: 300px;
+  background-color: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ttagger-tags-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.ttagger-tags-dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.ttagger-tags-dropdown-checkbox {
+  width: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  color: #00ff00;
+}
+
+.ttagger-tags-dropdown-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ttagger-tags-dropdown-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown Separator */
+.ttagger-tags-dropdown-separator {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 0.25rem 0;
+}
+
+/* Create Tag Button */
+.ttagger-tags-create-btn {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ttagger-tags-create-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ttagger-tags-create-btn .ttagger-tags-dropdown-checkbox {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+  font-weight: 400;
+}
+
+/* Create Tag Form */
+.ttagger-tags-create-form {
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+.ttagger-tags-create-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.ttagger-tags-create-input:focus {
+  border-color: rgba(145, 70, 255, 0.8);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.ttagger-tags-create-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ttagger-tags-create-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.ttagger-tags-create-save,
+.ttagger-tags-create-cancel {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.ttagger-tags-create-save:hover,
+.ttagger-tags-create-cancel:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.ttagger-tags-create-save {
+  background-color: rgba(145, 70, 255, 0.3);
+  border-color: rgba(145, 70, 255, 0.5);
+  color: #fff;
+}
+
+.ttagger-tags-create-save:hover {
+  background-color: rgba(145, 70, 255, 0.5);
+  border-color: rgba(145, 70, 255, 0.7);
+}
+
+.ttagger-tags-create-save:disabled,
+.ttagger-tags-create-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Light theme adjustments */
+.tw-root--theme-light .ttagger-tags-section {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+.tw-root--theme-light .ttagger-tags-label {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.tw-root--theme-light .ttagger-tag-badge {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.tw-root--theme-light .ttagger-no-tags {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.tw-root--theme-light .ttagger-tags-dropdown-btn {
+  border-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.3);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.tw-root--theme-light .ttagger-tags-dropdown-btn:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(0, 0, 0, 0.3);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.tw-root--theme-light .ttagger-tags-dropdown-menu {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.tw-root--theme-light .ttagger-tags-dropdown-item {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.tw-root--theme-light .ttagger-tags-dropdown-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.tw-root--theme-light .ttagger-tags-dropdown-separator {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.tw-root--theme-light .ttagger-tags-create-btn {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.tw-root--theme-light .ttagger-tags-create-btn:hover {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.tw-root--theme-light .ttagger-tags-create-btn .ttagger-tags-dropdown-checkbox {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.tw-root--theme-light .ttagger-tags-create-input {
+  border-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.tw-root--theme-light .ttagger-tags-create-input:focus {
+  border-color: rgba(145, 70, 255, 0.6);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.tw-root--theme-light .ttagger-tags-create-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.tw-root--theme-light .ttagger-tags-create-save,
+.tw-root--theme-light .ttagger-tags-create-cancel {
+  border-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.tw-root--theme-light .ttagger-tags-create-save:hover,
+.tw-root--theme-light .ttagger-tags-create-cancel:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.tw-root--theme-light .ttagger-tags-create-save {
+  background-color: rgba(145, 70, 255, 0.2);
+  border-color: rgba(145, 70, 255, 0.4);
+  color: rgb(100, 40, 200);
+}
+
+.tw-root--theme-light .ttagger-tags-create-save:hover {
+  background-color: rgba(145, 70, 255, 0.3);
+  border-color: rgba(145, 70, 255, 0.5);
+}
+
+/* Accessibility: Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .ttagger-star-button {
+    transition: none;
+  }
+
+  .ttagger-star-button:hover {
+    transform: none;
+  }
+}
+
+/* Responsive: Stack tags on smaller screens */
+@media (max-width: 768px) {
+  .ttagger-tags-container {
+    gap: 0.375rem;
+  }
+
+  .ttagger-tag-badge {
+    padding: 0.2rem 0.6rem;
+    font-size: 12px;
+  }
+}

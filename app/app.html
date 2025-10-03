@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="app_title">TTagger</title>
+    <link rel="stylesheet" href="../assets/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../styles/app.css" />
+  </head>
+  <body class="bg-body text-body">
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="app-header-top">
+          <div class="app-title">
+            <img
+              src="../assets/icons/icon48.png"
+              class="app-title-icon"
+              data-i18n-attrs="alt:app_icon_alt"
+              alt="TTagger icon"
+            />
+            <h1 class="h3 mb-0 app-title-text" data-i18n="app_title">TTagger</h1>
+          </div>
+          <div class="app-header-actions">
+            <div class="app-account">
+              <span class="account-label small text-muted" id="user-label"></span>
+            </div>
+            <div class="theme-control d-flex gap-3 align-items-center">
+              <span class="theme-label" data-i18n="app_theme_label">Theme</span>
+              <div
+                class="btn-group theme-toggle"
+                role="group"
+                aria-label="Theme preference"
+                data-i18n-attrs="aria-label:app_theme_group_label"
+              >
+                <input type="radio" class="btn-check" name="theme-mode" id="theme-system" value="system" autocomplete="off" />
+                <label
+                  class="btn btn-outline-primary btn-sm theme-btn"
+                  for="theme-system"
+                  data-i18n-attrs="title:app_theme_tooltip_system"
+                  title="Match system theme"
+                >
+                  <span class="theme-icon" aria-hidden="true">
+                    <svg width="16" height="16" fill="currentColor" focusable="false">
+                      <use href="../assets/icons/system.svg#icon"/>
+                    </svg>
+                  </span>
+                  <span class="visually-hidden" data-i18n="app_theme_option_system">System</span>
+                </label>
+
+                <input type="radio" class="btn-check" name="theme-mode" id="theme-dark" value="dark" autocomplete="off" />
+                <label
+                  class="btn btn-outline-primary btn-sm theme-btn"
+                  for="theme-dark"
+                  data-i18n-attrs="title:app_theme_tooltip_dark"
+                  title="Dark theme"
+                >
+                  <span class="theme-icon" aria-hidden="true">
+                    <svg width="16" height="16" fill="currentColor" focusable="false">
+                      <use href="../assets/icons/dark.svg#icon"/>
+                    </svg>
+                  </span>
+                  <span class="visually-hidden" data-i18n="app_theme_option_dark">Dark</span>
+                </label>
+
+                <input type="radio" class="btn-check" name="theme-mode" id="theme-light" value="light" autocomplete="off" />
+                <label
+                  class="btn btn-outline-primary btn-sm theme-btn"
+                  for="theme-light"
+                  data-i18n-attrs="title:app_theme_tooltip_light"
+                  title="Light theme"
+                >
+                  <span class="theme-icon" aria-hidden="true">
+                    <svg width="16" height="16" fill="currentColor" focusable="false">
+                      <use href="../assets/icons/light.svg#icon"/>
+                    </svg>
+                  </span>
+                  <span class="visually-hidden" data-i18n="app_theme_option_light">Light</span>
+                </label>
+              </div>
+            </div>
+            <button
+              class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center"
+              id="settings-button"
+              style="padding: 0.25rem 0.5rem;"
+              data-i18n-attrs="title:common_settings"
+              title="Settings"
+            >
+              <svg width="16" height="16" fill="currentColor" aria-hidden="true" style="display: block;">
+                <use href="../assets/icons/settings.svg#icon"/>
+              </svg>
+              <span class="visually-hidden" data-i18n="common_settings">Settings</span>
+            </button>
+            <button class="btn btn-sm btn-primary" id="login-button" data-i18n="app_connect_button">Connect Twitch</button>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <div class="flex-grow-1">
+            <div class="input-group">
+              <span class="input-group-text" id="name-filter-label" data-i18n="app_filter_streamer_label">Filter streamer</span>
+              <input
+                type="text"
+                class="form-control"
+                id="name-filter"
+                aria-labelledby="name-filter-label"
+                placeholder="Streamer name"
+                data-i18n-attrs="placeholder:app_filter_streamer_placeholder"
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                id="clear-name-filter"
+                style="display: none;"
+                aria-label="Clear streamer filter"
+                data-i18n-attrs="aria-label:app_filter_streamer_clear"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          <div class="flex-grow-1">
+            <div class="input-group">
+              <span class="input-group-text" id="content-filter-label" data-i18n="app_filter_content_label">Filter content</span>
+              <input
+                type="text"
+                class="form-control"
+                id="content-filter"
+                aria-labelledby="content-filter-label"
+                placeholder="Title or category"
+                data-i18n-attrs="placeholder:app_filter_content_placeholder"
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                id="clear-content-filter"
+                style="display: none;"
+                aria-label="Clear content filter"
+                data-i18n-attrs="aria-label:app_filter_content_clear"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          <div>
+            <select
+              class="form-select"
+              id="sort-select"
+              aria-label="Sort streamers"
+              data-i18n-attrs="aria-label:app_sort_label"
+            >
+              <option value="follow-date-desc" data-i18n="app_sort_option_newest">Newest follows</option>
+              <option value="follow-date-asc" data-i18n="app_sort_option_oldest">Oldest follows</option>
+              <option value="name-asc" data-i18n="app_sort_option_name_ascending">Name A → Z</option>
+              <option value="name-desc" data-i18n="app_sort_option_name_descending">Name Z → A</option>
+            </select>
+          </div>
+          <input type="checkbox" class="btn-check" id="live-toggle" autocomplete="off" />
+          <label class="btn btn-sm btn-outline-primary" id="live-toggle-label" for="live-toggle">
+            <span class="live-toggle-icon" aria-hidden="true">●</span>
+            <span data-i18n="app_live_toggle">Live first</span>
+          </label>
+          <input type="checkbox" class="btn-check" id="starred-toggle" autocomplete="off" />
+          <label class="btn btn-sm btn-outline-warning" id="starred-toggle-label" for="starred-toggle">
+            <span class="starred-toggle-icon" aria-hidden="true">⭐</span>
+            <span data-i18n="app_starred_toggle">Starred first</span>
+          </label>
+        </div>
+      </header>
+
+      <div class="app-main">
+        <button
+          class="btn btn-outline-primary tag-pane-toggle d-lg-none"
+          id="tag-pane-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="tag-sidebar"
+          data-i18n="app_tag_toggle"
+        >
+          Tags
+        </button>
+        <aside class="tag-pane" id="tag-sidebar">
+          <div class="d-flex justify-content-between align-items-center tag-pane-header">
+            <h2 class="h5 mb-0" data-i18n="app_tag_section_heading">Tags</h2>
+            <div class="d-flex align-items-center gap-2 tag-pane-actions">
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                id="reorder-tags-button"
+                type="button"
+                aria-pressed="false"
+                aria-label="Enable tag move mode"
+                data-i18n-attrs="aria-label:app_reorder_tags_aria"
+                data-i18n="app_reorder_tags_button"
+              >
+                Move
+              </button>
+              <button class="btn btn-sm btn-primary" id="add-tag-button" data-i18n="app_add_tag_button">Add Tag</button>
+              <button
+                class="btn btn-sm btn-outline-secondary tag-pane-close d-lg-none"
+                id="tag-pane-close"
+                type="button"
+                aria-label="Hide tags"
+                data-i18n-attrs="aria-label:app_hide_tags"
+                data-i18n="common_done"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+          <ul
+            class="list-group mb-0 tag-list"
+            id="tag-list"
+            role="list"
+            aria-label="Tag list"
+            data-i18n-attrs="aria-label:app_tag_list_label"
+          ></ul>
+        </aside>
+
+        <main class="streamer-pane">
+          <div class="streamer-pane-header">
+            <span class="fw-semibold" id="streamer-count" data-i18n="app_streamer_count_initial">0 streamers</span>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <span class="text-muted small" id="updated-label"></span>
+              <button
+                class="btn btn-sm btn-primary"
+                id="refresh-button"
+                title="Refresh follows"
+                data-i18n-attrs="title:app_refresh_tooltip"
+                data-i18n="common_refresh"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div class="streamer-list" id="streamer-container">
+            <p class="text-muted mb-0" data-i18n="app_signed_out_message">Sign in to load your followed streamers.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script src="../assets/bootstrap/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
