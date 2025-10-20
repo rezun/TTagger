@@ -1,7 +1,7 @@
 import { extension, setBadgeBackgroundColor, setBadgeText } from '../util/extension.js';
 import { createLiveNotification } from '../util/notifications.js';
 import { FOLLOW_CACHE_TTL_MS } from '../config.js';
-import { getPreferences, getTagState, addUpdateLogEntry } from '../storage/index.js';
+import { getPreferences, getTagState, addUpdateLogEntry, constants as storageConstants } from '../storage/index.js';
 import { normalizeTagState } from './tagState.js';
 import { refreshFollowCache, CACHE_ITEMS_KEY } from './followCache.js';
 import { getAuthStatus } from '../../background/oauth.js';
@@ -10,6 +10,8 @@ import { isValidTwitchUsername } from '../util/validators.js';
 const LIVE_CHECK_ALARM_NAME = 'live-check-alarm';
 const LIVE_STATE_KEY = 'liveState';
 const BADGE_COLOR = '#9146FF';
+const DEFAULT_NOTIFICATION_MAX_AGE_MINUTES = storageConstants.DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
+const MAX_NOTIFICATION_MAX_AGE_MINUTES = storageConstants.MAX_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
 // Prevent duplicate entries when initialization runs right before an alarm fires.
 const RECENT_INITIALIZATION_DEBOUNCE_MS = 1500;
 
@@ -107,7 +109,18 @@ async function loadLiveState() {
     const result = await extension.storage.local.get(LIVE_STATE_KEY);
     const saved = result[LIVE_STATE_KEY] || {};
     liveState = new Map(
-      Object.entries(saved).map(([streamerId, isLive]) => [streamerId, !!isLive]),
+      Object.entries(saved).map(([streamerId, entry]) => {
+        if (!entry || typeof entry !== 'object') {
+          return [streamerId, { isLive: !!entry, startedAt: null }];
+        }
+        return [
+          streamerId,
+          {
+            isLive: !!entry.isLive,
+            startedAt: Number.isFinite(entry.startedAt) ? entry.startedAt : null,
+          },
+        ];
+      }),
     );
   } catch (error) {
     console.warn('Failed to load live state:', error);
@@ -117,11 +130,25 @@ async function loadLiveState() {
 
 async function saveLiveState() {
   try {
-    const obj = Object.fromEntries(liveState);
+    const obj = Object.fromEntries(
+      Array.from(liveState.entries()).map(([streamerId, entry]) => [
+        streamerId,
+        {
+          isLive: !!entry?.isLive,
+          startedAt: Number.isFinite(entry?.startedAt) ? entry.startedAt : null,
+        },
+      ]),
+    );
     await extension.storage.local.set({ [LIVE_STATE_KEY]: obj });
   } catch (error) {
     console.warn('Failed to save live state:', error);
   }
+}
+
+function parseStartedAtMs(startedAt) {
+  if (!startedAt) return null;
+  const parsed = Date.parse(startedAt);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function scheduleLiveCheckFallback() {
@@ -188,8 +215,8 @@ export async function stopLiveChecks() {
 
 function getLiveStarredCount() {
   let count = 0;
-  liveState.forEach((isLive) => {
-    if (isLive) count += 1;
+  liveState.forEach((entry) => {
+    if (entry?.isLive) count += 1;
   });
   return count;
 }
@@ -247,8 +274,12 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
 
   const liveStatusMap = new Map();
 
+  const cacheItemsById = new Map();
+
   cacheItems.forEach((streamer) => {
-    liveStatusMap.set(String(streamer.id), !!streamer.isLive);
+    const streamerId = String(streamer.id);
+    cacheItemsById.set(streamerId, streamer);
+    liveStatusMap.set(streamerId, !!streamer.isLive);
   });
 
   let modified = false;
@@ -257,7 +288,8 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
   for (const streamerId of Array.from(liveState.keys())) {
     const isStarred = starredIds.has(streamerId);
     const isCurrentlyLive = liveStatusMap.get(streamerId);
-    const wasLive = liveState.get(streamerId);
+    const previousEntry = liveState.get(streamerId) || { isLive: false, startedAt: null };
+    const wasLive = !!previousEntry.isLive;
 
     // Remove if no longer starred
     if (!isStarred) {
@@ -269,12 +301,19 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
     // Remove or update if live status changed
     if (wasLive && isCurrentlyLive === false) {
       // Streamer went offline
-      liveState.delete(streamerId);
+      liveState.set(streamerId, { isLive: false, startedAt: null });
       modified = true;
-    } else if (!wasLive && isCurrentlyLive === true) {
-      // Streamer went live (update state)
-      liveState.set(streamerId, true);
-      modified = true;
+    } else if (isCurrentlyLive === true) {
+      const data = cacheItemsById.get(streamerId);
+      const startedAtMs = parseStartedAtMs(data?.startedAt);
+      const newEntry = {
+        isLive: true,
+        startedAt: startedAtMs,
+      };
+      if (!wasLive || previousEntry.startedAt !== newEntry.startedAt) {
+        modified = true;
+      }
+      liveState.set(streamerId, newEntry);
     }
   }
 
@@ -285,7 +324,12 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
     }
 
     if (liveStatusMap.get(streamerId)) {
-      liveState.set(streamerId, true);
+      const data = cacheItemsById.get(streamerId);
+      const startedAtMs = parseStartedAtMs(data?.startedAt);
+      liveState.set(streamerId, {
+        isLive: true,
+        startedAt: startedAtMs,
+      });
       modified = true;
     }
   });
@@ -321,6 +365,11 @@ async function runLiveCheck() {
   try {
     const preferences = await getPreferences();
     const shouldNotify = !!preferences.notificationsEnabled;
+    const maxAgeMinutesRaw = Number(preferences.notificationMaxStreamAgeMinutes);
+    const maxAgeMinutes = Number.isFinite(maxAgeMinutesRaw) && maxAgeMinutesRaw > 0
+      ? Math.min(maxAgeMinutesRaw, MAX_NOTIFICATION_MAX_AGE_MINUTES)
+      : DEFAULT_NOTIFICATION_MAX_AGE_MINUTES;
+    const maxAgeMs = maxAgeMinutes * 60 * 1000;
 
     const tagState = normalizeTagState(await getTagState());
     const assignments = tagState.assignments || {};
@@ -330,10 +379,20 @@ async function runLiveCheck() {
     const starredIds = new Set(starredStreamers.map((streamer) => streamer.id));
 
     for (const streamer of starredStreamers) {
-      const wasLive = liveState.get(streamer.id) || false;
+      const previousEntry = liveState.get(streamer.id) || { isLive: false, startedAt: null };
+      const wasLive = !!previousEntry.isLive;
       const isLive = streamer.isLive;
+      const startedAtMs = parseStartedAtMs(streamer.startedAt);
+      const streamAgeMs = Number.isFinite(startedAtMs) ? Date.now() - startedAtMs : Number.POSITIVE_INFINITY;
+      const hasFreshStart = Number.isFinite(startedAtMs)
+        && (!Number.isFinite(previousEntry.startedAt) || previousEntry.startedAt !== startedAtMs);
 
-      if (!wasLive && isLive && shouldNotify) {
+      const isEligibleForNotification = shouldNotify
+        && isLive
+        && streamAgeMs <= maxAgeMs
+        && (!wasLive || hasFreshStart);
+
+      if (isEligibleForNotification) {
         // Validate streamer login to prevent URL injection attacks
         if (!isValidTwitchUsername(streamer.login)) {
           console.warn('Invalid streamer login, skipping notification:', streamer.id, streamer.login);
@@ -348,7 +407,10 @@ async function runLiveCheck() {
         }
       }
 
-      liveState.set(streamer.id, isLive);
+      liveState.set(streamer.id, {
+        isLive,
+        startedAt: isLive ? startedAtMs : null,
+      });
     }
 
     for (const streamerId of Array.from(liveState.keys())) {

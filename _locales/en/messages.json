@@ -448,6 +448,31 @@
     "message": "Enable live notifications",
     "description": "Label for the live notifications toggle."
   },
+  "options_notifications_cutoff_label": {
+    "message": "Only notify for streams started within",
+    "description": "Label for the notification cutoff input."
+  },
+  "options_notifications_cutoff_suffix": {
+    "message": "minutes",
+    "description": "Suffix shown next to the notification cutoff input."
+  },
+  "options_notifications_cutoff_help": {
+    "message": "Streams older than this window will not trigger alerts when checks resume.",
+    "description": "Helper text explaining the notification cutoff setting."
+  },
+  "options_notifications_cutoff_success": {
+    "message": "Notification window updated to $MINUTES$ minutes.",
+    "description": "Success message shown when the notification cutoff value is updated.",
+    "placeholders": {
+      "minutes": {
+        "content": "$1"
+      }
+    }
+  },
+  "options_notifications_cutoff_error": {
+    "message": "Failed to update the notification window.",
+    "description": "Error message shown when updating the notification cutoff fails."
+  },
   "options_language_help": {
     "message": "Override the extension language. Defaults to your browser language.",
     "description": "Helper text explaining the language override setting."

@@ -10,6 +10,9 @@ const PREFERENCE_KEY = 'preferences';
 const LAST_SEEN_LIVE_KEY = 'lastSeenLive';
 const UPDATE_LOG_KEY = 'updateLog';
 const MAX_LOG_ENTRIES = 300;
+const DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES = 30;
+const MIN_NOTIFICATION_MAX_STREAM_AGE_MINUTES = 5;
+const MAX_NOTIFICATION_MAX_STREAM_AGE_MINUTES = 720;
 
 const defaultTagState = Object.freeze({ tags: {}, assignments: {}, nextId: 1 });
 const defaultPreferences = Object.freeze({
@@ -26,6 +29,7 @@ const defaultPreferences = Object.freeze({
   twitchHighlighting: true,
   languageOverride: 'system',
   debugLogging: false,
+  notificationMaxStreamAgeMinutes: DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES,
 });
 
 export async function getAuthState() {
@@ -175,6 +179,18 @@ export async function getPreferences() {
       }
     }
 
+    const maxAgeRaw = Number(merged.notificationMaxStreamAgeMinutes);
+    if (!Number.isFinite(maxAgeRaw)) {
+      merged.notificationMaxStreamAgeMinutes = DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
+    } else {
+      const rounded = Math.round(maxAgeRaw);
+      const clamped = Math.min(
+        MAX_NOTIFICATION_MAX_STREAM_AGE_MINUTES,
+        Math.max(MIN_NOTIFICATION_MAX_STREAM_AGE_MINUTES, rounded),
+      );
+      merged.notificationMaxStreamAgeMinutes = clamped;
+    }
+
     return merged;
   } catch (error) {
     console.error('[Storage] Failed to get preferences:', error);
@@ -255,4 +271,7 @@ export const constants = {
   UPDATE_LOG_KEY,
   POPUP_SNAPSHOT_KEY,
   MAX_LOG_ENTRIES,
+  DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES,
+  MIN_NOTIFICATION_MAX_STREAM_AGE_MINUTES,
+  MAX_NOTIFICATION_MAX_STREAM_AGE_MINUTES,
 };

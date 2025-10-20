@@ -34,6 +34,31 @@
             Enable live notifications
           </label>
         </div>
+        <div class="row g-2 align-items-center mt-3">
+          <div class="col-auto">
+            <label class="form-label mb-0" for="notification-cutoff" data-i18n="options_notifications_cutoff_label">
+              Only notify for streams started within
+            </label>
+          </div>
+          <div class="col-auto">
+            <div class="input-group">
+              <input
+                class="form-control"
+                type="number"
+                id="notification-cutoff"
+                min="5"
+                max="720"
+                step="5"
+              />
+              <span class="input-group-text" data-i18n="options_notifications_cutoff_suffix">minutes</span>
+            </div>
+          </div>
+          <div class="col-12">
+            <small class="form-text" data-i18n="options_notifications_cutoff_help">
+              Streams older than this window will not trigger alerts when background checks resume.
+            </small>
+          </div>
+        </div>
       </section>
 
       <section class="mb-4">

@@ -1,7 +1,7 @@
 import { sendRuntimeMessage, invoke, addRuntimeListener } from '../src/util/extension.js';
 import { handleUserError } from '../src/util/errors.js';
 import { localize, getMessageStrict, setLanguageOverride } from '../src/util/i18n.js';
-import { getPreferences } from '../src/storage/index.js';
+import { getPreferences, constants as storageConstants } from '../src/storage/index.js';
 
 let currentLanguagePreference = 'system';
 let activeLanguageOverride = null;
@@ -32,6 +32,7 @@ const importInput = document.getElementById('import-input');
 const signoutButton = document.getElementById('signout-button');
 const statusButton = document.getElementById('status-button');
 const notificationsToggle = document.getElementById('notifications-toggle');
+const notificationCutoffInput = document.getElementById('notification-cutoff');
 const openTabNever = document.getElementById('open-tab-never');
 const openTabAlways = document.getElementById('open-tab-always');
 const openTabSmart = document.getElementById('open-tab-smart');
@@ -45,6 +46,10 @@ const exportLogButton = document.getElementById('export-log');
 const logEntriesEl = document.getElementById('log-entries');
 const languageSelect = document.getElementById('language-select');
 
+const NOTIFICATION_CUTOFF_DEFAULT = storageConstants.DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
+const NOTIFICATION_CUTOFF_MIN = storageConstants.MIN_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
+const NOTIFICATION_CUTOFF_MAX = storageConstants.MAX_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
+
 
 
 function showStatus(message, variant = 'success') {
@@ -55,6 +60,18 @@ function showStatus(message, variant = 'success') {
 
 function hideStatus() {
   statusEl.classList.add('d-none');
+}
+
+function normalizeNotificationCutoff(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return NOTIFICATION_CUTOFF_DEFAULT;
+  }
+  const rounded = Math.round(parsed);
+  return Math.min(
+    NOTIFICATION_CUTOFF_MAX,
+    Math.max(NOTIFICATION_CUTOFF_MIN, rounded),
+  );
 }
 
 async function handleExport() {
@@ -155,6 +172,15 @@ async function loadNotificationPreference() {
       ? ''
       : t('options_notifications_require_auth');
 
+    if (notificationCutoffInput) {
+      const cutoff = normalizeNotificationCutoff(preferences.notificationMaxStreamAgeMinutes);
+      notificationCutoffInput.value = cutoff;
+      notificationCutoffInput.disabled = !isSignedIn;
+      notificationCutoffInput.title = isSignedIn
+        ? ''
+        : t('options_notifications_require_auth');
+    }
+
     // Handle backwards compatibility for openInCurrentTab
     let openInCurrentTab = preferences.openInCurrentTab;
     if (typeof openInCurrentTab === 'boolean') {
@@ -188,6 +214,10 @@ async function loadNotificationPreference() {
   } catch (error) {
     console.warn('Failed to load notification preference:', error);
     notificationsToggle.disabled = true;
+    if (notificationCutoffInput) {
+      notificationCutoffInput.disabled = true;
+      notificationCutoffInput.value = NOTIFICATION_CUTOFF_DEFAULT;
+    }
     if (resetButton) {
       resetButton.disabled = true;
     }
@@ -213,6 +243,27 @@ async function handleNotificationToggle() {
     showStatus(message, 'success');
   } catch (error) {
     const message = error?.message || t('options_notifications_update_error');
+    handleUserError(error, message);
+    showStatus(message, 'danger');
+    await loadNotificationPreference();
+  }
+}
+
+async function handleNotificationCutoffChange() {
+  if (!notificationCutoffInput) return;
+  hideStatus();
+
+  const normalized = normalizeNotificationCutoff(notificationCutoffInput.value);
+  notificationCutoffInput.value = normalized;
+
+  try {
+    await invoke('preferences:update', {
+      preferences: { notificationMaxStreamAgeMinutes: normalized }
+    });
+    const successMessage = t('options_notifications_cutoff_success', [normalized]);
+    showStatus(successMessage, 'success');
+  } catch (error) {
+    const message = error?.message || t('options_notifications_cutoff_error');
     handleUserError(error, message);
     showStatus(message, 'danger');
     await loadNotificationPreference();
@@ -509,6 +560,7 @@ function init() {
   signoutButton.addEventListener('click', handleSignout);
   statusButton.addEventListener('click', checkStatus);
   notificationsToggle.addEventListener('change', handleNotificationToggle);
+  notificationCutoffInput?.addEventListener('change', handleNotificationCutoffChange);
   openTabNever?.addEventListener('change', handleOpenInCurrentTabToggle);
   openTabAlways?.addEventListener('change', handleOpenInCurrentTabToggle);
   openTabSmart?.addEventListener('change', handleOpenInCurrentTabToggle);
