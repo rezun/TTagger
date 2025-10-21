@@ -171,7 +171,7 @@
    * Clean up all event listeners, observers, and timers to prevent memory leaks
    */
   function cleanup() {
-    debug('Cleaning up event listeners and observers...');
+    debug('Cleaning up per-streamer observers...');
 
     // Clear interval timer
     if (checkInterval) {
@@ -180,17 +180,13 @@
       debug('Cleared injection check interval');
     }
 
-    // Remove all tracked event listeners
-    eventListeners.forEach(({ target, type, listener, options }) => {
-      target.removeEventListener(type, listener, options);
-    });
-    eventListeners.length = 0;
-    debug('Removed', eventListeners.length, 'event listeners');
-
-    // Disconnect all tracked observers
+    // Disconnect all tracked observers that are scoped to the current streamer
+    const observerCount = observers.length;
     observers.forEach(observer => observer.disconnect());
     observers.length = 0;
-    debug('Disconnected', observers.length, 'observers');
+    if (observerCount > 0) {
+      debug('Disconnected', observerCount, 'tracked observers');
+    }
 
     // Disconnect follow button observer
     if (followButtonObserver) {
@@ -199,21 +195,7 @@
       debug('Disconnected follow button observer');
     }
 
-    // Disconnect URL change observer
-    if (urlChangeObserver) {
-      urlChangeObserver.disconnect();
-      urlChangeObserver = null;
-      debug('Disconnected URL change observer');
-    }
-
-    // Remove storage listener
-    if (storageListener) {
-      chrome.storage.onChanged.removeListener(storageListener);
-      storageListener = null;
-      debug('Removed storage listener');
-    }
-
-    debug('Cleanup complete');
+    debug('Per-streamer cleanup complete');
   }
 
   /**
