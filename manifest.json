@@ -61,7 +61,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "src/util/i18n.js"
+        "src/util/i18n.js",
+        "_locales/*/messages.json"
       ],
       "matches": [
         "*://www.twitch.tv/*",
