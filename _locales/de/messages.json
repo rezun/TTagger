@@ -403,7 +403,7 @@
     "description": "Radio button label for smart stream opening behavior."
   },
   "options_twitch_integration_help": {
-    "message": "Markiere Favoriten auf Twitch.tv mit einem goldenen Ring und kompakten Tag-Badges.",
+    "message": "Markiere Favoriten auf Twitch.tv mit einem anpassbaren Ring und kompakten Tag-Badges.",
     "description": "Helper text explaining Twitch integration."
   },
   "options_twitch_integration_toggle": {
@@ -413,6 +413,34 @@
   "options_twitch_sidebar_tags_toggle": {
     "message": "Tag-Badges neben Streamern anzeigen",
     "description": "Label for the Twitch sidebar tag badges toggle."
+  },
+  "options_twitch_highlight_color_label": {
+    "message": "Highlight-Farbe",
+    "description": "Label for the Twitch highlight color picker."
+  },
+  "options_twitch_highlight_color_help": {
+    "message": "Wähle die Farbe für Rahmen und Glanz deiner favorisierten Streamer.",
+    "description": "Helper text for the Twitch highlight color picker."
+  },
+  "options_twitch_highlight_color_reset": {
+    "message": "Zurücksetzen",
+    "description": "Button label to reset the Twitch highlight color to default."
+  },
+  "options_highlight_color_success": {
+    "message": "Highlight-Farbe für Twitch aktualisiert.",
+    "description": "Success message when the Twitch highlight color preference is saved."
+  },
+  "options_highlight_color_error": {
+    "message": "Highlight-Farbe konnte nicht aktualisiert werden.",
+    "description": "Error message when the Twitch highlight color preference fails to save."
+  },
+  "options_highlight_color_invalid": {
+    "message": "Bitte gib einen gültigen Hex-Farbwert ein, z. B. #ffd700.",
+    "description": "Validation message when the Twitch highlight color input is invalid."
+  },
+  "options_highlight_color_reset_success": {
+    "message": "Highlight-Farbe auf das goldene Standard-Highlight zurückgesetzt.",
+    "description": "Success message when the Twitch highlight color is reset."
   },
   "options_sidebar_tags_enabled": {
     "message": "Tag-Badges in der Seitenleiste aktiviert.",

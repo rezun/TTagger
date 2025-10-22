@@ -102,7 +102,7 @@
       <section class="mb-4">
         <h2 class="h5" data-i18n="options_section_twitch_integration">Twitch Integration</h2>
         <p class="form-text" data-i18n="options_twitch_integration_help">
-          Highlight starred streamers on Twitch.tv with a golden ring and compact tag badges.
+          Highlight starred streamers on Twitch.tv with a customizable ring and compact tag badges.
         </p>
         <div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" id="twitch-highlighting-toggle" />
@@ -115,6 +115,42 @@
           <label class="form-check-label" for="twitch-sidebar-tags-toggle" data-i18n="options_twitch_sidebar_tags_toggle">
             Show tag badges next to streamers
           </label>
+        </div>
+        <div class="mt-3">
+          <label class="form-label" for="twitch-highlight-color" data-i18n="options_twitch_highlight_color_label">
+            Highlight color
+          </label>
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <input
+              class="form-control form-control-color"
+              type="color"
+              id="twitch-highlight-color"
+              name="twitch-highlight-color"
+              value="#ffd700"
+              title="Choose highlight color"
+            />
+            <input
+              class="form-control"
+              type="text"
+              id="twitch-highlight-color-hex"
+              name="twitch-highlight-color-hex"
+              maxlength="7"
+              placeholder="#ffd700"
+              aria-describedby="twitch-highlight-color-help"
+              style="width: 7rem;"
+            />
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              type="button"
+              id="twitch-highlight-color-reset"
+              data-i18n="options_twitch_highlight_color_reset"
+            >
+              Reset
+            </button>
+          </div>
+          <div class="form-text" id="twitch-highlight-color-help" data-i18n="options_twitch_highlight_color_help">
+            Pick the color used for the ring and glow around starred streamers.
+          </div>
         </div>
       </section>
 

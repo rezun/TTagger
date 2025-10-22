@@ -11,9 +11,11 @@ const HIGHLIGHT_CLASS = 'ttagger-starred';
 const TAG_CONTAINER_CLASS = 'ttagger-sidebar-tag-badges';
 const TAG_BADGE_CLASS = 'ttagger-sidebar-tag-badge';
 const DEFAULT_BADGE_COLOR = '#6f42c1';
+const DEFAULT_HIGHLIGHT_COLOR = '#ffd700';
 const DEBOUNCE_DELAY = 300;
 let LOG_DEBUG = false;
 const DEBUG_PREFIX = '[TTagger Highlight]';
+let highlightColor = DEFAULT_HIGHLIGHT_COLOR;
 
 // State
 let starredStreamerIds = new Set(); // Twitch user IDs
@@ -84,6 +86,102 @@ function getContrastingTextColor(background) {
   return luminance > 0.57 ? '#1f1f23' : '#ffffff';
 }
 
+function clampChannel(value) {
+  return Math.min(255, Math.max(0, Math.round(value)));
+}
+
+function parseHexColor(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const match = value.trim().toLowerCase().match(/^#?([0-9a-f]{6})$/);
+  if (!match) {
+    return null;
+  }
+  const hex = match[1];
+  return {
+    r: parseInt(hex.slice(0, 2), 16),
+    g: parseInt(hex.slice(2, 4), 16),
+    b: parseInt(hex.slice(4, 6), 16),
+  };
+}
+
+function formatHex(rgb) {
+  if (!rgb) {
+    return DEFAULT_HIGHLIGHT_COLOR;
+  }
+  const toHex = (channel) => clampChannel(channel).toString(16).padStart(2, '0');
+  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+}
+
+function mixChannel(source, target, amount) {
+  const ratio = Math.min(1, Math.max(0, amount));
+  return clampChannel(source + (target - source) * ratio);
+}
+
+function lightenColor(rgb, amount) {
+  return {
+    r: mixChannel(rgb.r, 255, amount),
+    g: mixChannel(rgb.g, 255, amount),
+    b: mixChannel(rgb.b, 255, amount),
+  };
+}
+
+function darkenColor(rgb, amount) {
+  return {
+    r: mixChannel(rgb.r, 0, amount),
+    g: mixChannel(rgb.g, 0, amount),
+    b: mixChannel(rgb.b, 0, amount),
+  };
+}
+
+function toRgba(rgb, alpha = 1) {
+  const normalizedAlpha = Math.min(1, Math.max(0, Number.isFinite(alpha) ? alpha : 1));
+  return `rgba(${clampChannel(rgb.r)}, ${clampChannel(rgb.g)}, ${clampChannel(rgb.b)}, ${normalizedAlpha})`;
+}
+
+function normalizeHighlightColor(value) {
+  const parsed = parseHexColor(value);
+  if (!parsed) {
+    return DEFAULT_HIGHLIGHT_COLOR;
+  }
+  return formatHex(parsed);
+}
+
+function buildHighlightPalette(colorHex) {
+  const base = parseHexColor(colorHex) || parseHexColor(DEFAULT_HIGHLIGHT_COLOR);
+  if (!base) {
+    return null;
+  }
+  const brighter = lightenColor(base, 0.25);
+  const darker = darkenColor(base, 0.2);
+  const darkest = darkenColor(base, 0.35);
+  return {
+    ring: `linear-gradient(135deg, ${formatHex(darker)} 0%, ${formatHex(brighter)} 50%, ${formatHex(darker)} 100%)`,
+    ringLight: `linear-gradient(135deg, ${formatHex(darkest)} 0%, ${formatHex(darker)} 50%, ${formatHex(darkest)} 100%)`,
+    shadow: toRgba(base, 0.7),
+    shadowHover: toRgba(base, 0.9),
+    shadowLight: toRgba(darker, 1),
+    shadowHoverLight: toRgba(darkest, 1),
+  };
+}
+
+function applyHighlightPalette(palette) {
+  if (!palette) {
+    return;
+  }
+  const root = document.documentElement;
+  if (!root) {
+    return;
+  }
+  root.style.setProperty('--ttagger-highlight-ring', palette.ring);
+  root.style.setProperty('--ttagger-highlight-ring-light', palette.ringLight);
+  root.style.setProperty('--ttagger-highlight-shadow', palette.shadow);
+  root.style.setProperty('--ttagger-highlight-shadow-hover', palette.shadowHover);
+  root.style.setProperty('--ttagger-highlight-shadow-light', palette.shadowLight);
+  root.style.setProperty('--ttagger-highlight-shadow-hover-light', palette.shadowHoverLight);
+}
+
 /**
  * Resolve the Twitch username associated with a sidebar card.
  * @param {Element} cardElement
@@ -108,11 +206,15 @@ async function fetchHighlightingPreference() {
     highlightingEnabled = preferences.twitchHighlighting !== false;
     sidebarTagsEnabled = preferences.twitchSidebarTags !== false;
     setDebugLogging(preferences.debugLogging === true);
+    highlightColor = normalizeHighlightColor(preferences.twitchHighlightColor);
+    applyHighlightPalette(buildHighlightPalette(highlightColor));
     return highlightingEnabled;
   } catch (error) {
     console.error('[TTagger] Error fetching highlighting preference:', error);
     LOG_DEBUG = false;
     sidebarTagsEnabled = true;
+    highlightColor = DEFAULT_HIGHLIGHT_COLOR;
+    applyHighlightPalette(buildHighlightPalette(highlightColor));
     return true; // Default to enabled
   }
 }

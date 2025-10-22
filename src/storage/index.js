@@ -28,6 +28,7 @@ const defaultPreferences = Object.freeze({
   openInCurrentTab: 'never', // 'never', 'always', or 'smart'
   twitchHighlighting: true,
   twitchSidebarTags: true,
+  twitchHighlightColor: '#ffd700',
   languageOverride: 'system',
   debugLogging: false,
   notificationMaxStreamAgeMinutes: DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES,
@@ -191,6 +192,14 @@ export async function getPreferences() {
       );
       merged.notificationMaxStreamAgeMinutes = clamped;
     }
+
+    const highlightColor = typeof merged.twitchHighlightColor === 'string'
+      ? merged.twitchHighlightColor.trim().toLowerCase()
+      : '';
+    const colorMatch = highlightColor.match(/^#?([0-9a-f]{6})$/);
+    merged.twitchHighlightColor = colorMatch
+      ? `#${colorMatch[1]}`
+      : defaultPreferences.twitchHighlightColor;
 
     return merged;
   } catch (error) {

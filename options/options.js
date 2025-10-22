@@ -5,6 +5,8 @@ import { getPreferences, constants as storageConstants } from '../src/storage/in
 
 let currentLanguagePreference = 'system';
 let activeLanguageOverride = null;
+const DEFAULT_HIGHLIGHT_COLOR = '#ffd700';
+let currentHighlightColor = DEFAULT_HIGHLIGHT_COLOR;
 
 const localizationReady = (async () => {
   try {
@@ -38,6 +40,9 @@ const openTabAlways = document.getElementById('open-tab-always');
 const openTabSmart = document.getElementById('open-tab-smart');
 const twitchHighlightingToggle = document.getElementById('twitch-highlighting-toggle');
 const twitchSidebarTagsToggle = document.getElementById('twitch-sidebar-tags-toggle');
+const twitchHighlightColorInput = document.getElementById('twitch-highlight-color');
+const twitchHighlightColorHexInput = document.getElementById('twitch-highlight-color-hex');
+const twitchHighlightColorResetButton = document.getElementById('twitch-highlight-color-reset');
 const debugLoggingToggle = document.getElementById('debug-logging-toggle');
 const resetButton = document.getElementById('reset-button');
 const statusEl = document.getElementById('status');
@@ -73,6 +78,30 @@ function normalizeNotificationCutoff(value) {
     NOTIFICATION_CUTOFF_MAX,
     Math.max(NOTIFICATION_CUTOFF_MIN, rounded),
   );
+}
+
+function normalizeHighlightColor(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) {
+    return null;
+  }
+  const match = trimmed.match(/^#?([0-9a-f]{6})$/);
+  if (!match) {
+    return null;
+  }
+  return `#${match[1]}`;
+}
+
+function syncHighlightColorInputs(color) {
+  if (twitchHighlightColorInput && color) {
+    twitchHighlightColorInput.value = color;
+  }
+  if (twitchHighlightColorHexInput && color) {
+    twitchHighlightColorHexInput.value = color;
+  }
 }
 
 async function handleExport() {
@@ -201,6 +230,18 @@ async function loadNotificationPreference() {
       twitchSidebarTagsToggle.checked = preferences.twitchSidebarTags !== false;
       twitchSidebarTagsToggle.disabled = false;
     }
+    const highlightColor = normalizeHighlightColor(preferences.twitchHighlightColor) || DEFAULT_HIGHLIGHT_COLOR;
+    currentHighlightColor = highlightColor;
+    syncHighlightColorInputs(highlightColor);
+    if (twitchHighlightColorInput) {
+      twitchHighlightColorInput.disabled = false;
+    }
+    if (twitchHighlightColorHexInput) {
+      twitchHighlightColorHexInput.disabled = false;
+    }
+    if (twitchHighlightColorResetButton) {
+      twitchHighlightColorResetButton.disabled = false;
+    }
     if (debugLoggingToggle) {
       debugLoggingToggle.checked = !!preferences.debugLogging;
       debugLoggingToggle.disabled = false;
@@ -236,6 +277,18 @@ async function loadNotificationPreference() {
       twitchSidebarTagsToggle.checked = true;
       twitchSidebarTagsToggle.disabled = true;
     }
+    if (twitchHighlightColorInput) {
+      twitchHighlightColorInput.disabled = true;
+      twitchHighlightColorInput.value = DEFAULT_HIGHLIGHT_COLOR;
+    }
+    if (twitchHighlightColorHexInput) {
+      twitchHighlightColorHexInput.disabled = true;
+      twitchHighlightColorHexInput.value = DEFAULT_HIGHLIGHT_COLOR;
+    }
+    if (twitchHighlightColorResetButton) {
+      twitchHighlightColorResetButton.disabled = true;
+    }
+    currentHighlightColor = DEFAULT_HIGHLIGHT_COLOR;
   }
 }
 
@@ -365,6 +418,67 @@ async function handleOpenInCurrentTabToggle() {
     showStatus(message, 'danger');
     await loadNotificationPreference();
   }
+}
+
+async function persistHighlightColor(color, { successMessageKey, forceMessage } = {}) {
+  if (!color) {
+    syncHighlightColorInputs(currentHighlightColor);
+    showStatus(t('options_highlight_color_invalid'), 'danger');
+    return;
+  }
+
+  if (color === currentHighlightColor) {
+    syncHighlightColorInputs(color);
+    if (forceMessage && successMessageKey) {
+      showStatus(t(successMessageKey), 'success');
+    }
+    return;
+  }
+
+  try {
+    await invoke('preferences:update', {
+      preferences: { twitchHighlightColor: color }
+    });
+    currentHighlightColor = color;
+    syncHighlightColorInputs(color);
+    const key = successMessageKey || 'options_highlight_color_success';
+    showStatus(t(key), 'success');
+  } catch (error) {
+    const message = error?.message || t('options_highlight_color_error');
+    handleUserError(error, message);
+    showStatus(message, 'danger');
+    syncHighlightColorInputs(currentHighlightColor);
+  }
+}
+
+async function handleHighlightColorPickerChange() {
+  if (!twitchHighlightColorInput) return;
+  hideStatus();
+  const normalized = normalizeHighlightColor(twitchHighlightColorInput.value);
+  await persistHighlightColor(normalized);
+}
+
+function previewHighlightColorFromHex(event) {
+  if (!twitchHighlightColorInput) return;
+  const normalized = normalizeHighlightColor(event.target.value);
+  if (normalized) {
+    twitchHighlightColorInput.value = normalized;
+  }
+}
+
+async function handleHighlightColorHexChange() {
+  if (!twitchHighlightColorHexInput) return;
+  hideStatus();
+  const normalized = normalizeHighlightColor(twitchHighlightColorHexInput.value);
+  await persistHighlightColor(normalized);
+}
+
+async function handleHighlightColorReset() {
+  hideStatus();
+  await persistHighlightColor(DEFAULT_HIGHLIGHT_COLOR, {
+    successMessageKey: 'options_highlight_color_reset_success',
+    forceMessage: true,
+  });
 }
 
 async function handleTwitchHighlightingToggle() {
@@ -595,6 +709,10 @@ function init() {
   openTabSmart?.addEventListener('change', handleOpenInCurrentTabToggle);
   twitchHighlightingToggle.addEventListener('change', handleTwitchHighlightingToggle);
   twitchSidebarTagsToggle?.addEventListener('change', handleTwitchSidebarTagsToggle);
+  twitchHighlightColorInput?.addEventListener('change', handleHighlightColorPickerChange);
+  twitchHighlightColorHexInput?.addEventListener('input', previewHighlightColorFromHex);
+  twitchHighlightColorHexInput?.addEventListener('change', handleHighlightColorHexChange);
+  twitchHighlightColorResetButton?.addEventListener('click', handleHighlightColorReset);
   debugLoggingToggle?.addEventListener('change', handleDebugLoggingToggle);
   resetButton?.addEventListener('click', handleReset);
   refreshLogButton.addEventListener('click', loadUpdateLog);

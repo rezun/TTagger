@@ -510,7 +510,7 @@
     "description": "Radio button label for smart stream opening behavior."
   },
   "options_twitch_integration_help": {
-    "message": "Highlight starred streamers on Twitch.tv with a golden ring and compact tag badges.",
+    "message": "Highlight starred streamers on Twitch.tv with a customizable ring and compact tag badges.",
     "description": "Helper text explaining Twitch integration."
   },
   "options_twitch_integration_toggle": {
@@ -520,6 +520,34 @@
   "options_twitch_sidebar_tags_toggle": {
     "message": "Show tag badges next to streamers",
     "description": "Label for the Twitch sidebar tag badges toggle."
+  },
+  "options_twitch_highlight_color_label": {
+    "message": "Highlight color",
+    "description": "Label for the Twitch highlight color picker."
+  },
+  "options_twitch_highlight_color_help": {
+    "message": "Pick the color used for the ring and glow around starred streamers.",
+    "description": "Helper text for the Twitch highlight color picker."
+  },
+  "options_twitch_highlight_color_reset": {
+    "message": "Reset",
+    "description": "Button label to reset the Twitch highlight color to default."
+  },
+  "options_highlight_color_success": {
+    "message": "Updated the Twitch highlight color.",
+    "description": "Success message when the Twitch highlight color preference is saved."
+  },
+  "options_highlight_color_error": {
+    "message": "Failed to update Twitch highlight color.",
+    "description": "Error message when the Twitch highlight color preference fails to save."
+  },
+  "options_highlight_color_invalid": {
+    "message": "Enter a valid hex color value, such as #ffd700.",
+    "description": "Validation message when the Twitch highlight color input is invalid."
+  },
+  "options_highlight_color_reset_success": {
+    "message": "Reset the Twitch highlight color to default gold.",
+    "description": "Success message when the Twitch highlight color is reset."
   },
   "options_sidebar_tags_enabled": {
     "message": "Sidebar tag badges enabled.",
