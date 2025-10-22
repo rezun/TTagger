@@ -510,12 +510,28 @@
     "description": "Radio button label for smart stream opening behavior."
   },
   "options_twitch_integration_help": {
-    "message": "Highlight starred streamers on Twitch.tv with a golden ring around their avatars.",
+    "message": "Highlight starred streamers on Twitch.tv with a golden ring and compact tag badges.",
     "description": "Helper text explaining Twitch integration."
   },
   "options_twitch_integration_toggle": {
     "message": "Highlight starred streamers on Twitch.tv",
     "description": "Label for the Twitch highlighting toggle."
+  },
+  "options_twitch_sidebar_tags_toggle": {
+    "message": "Show tag badges next to streamers",
+    "description": "Label for the Twitch sidebar tag badges toggle."
+  },
+  "options_sidebar_tags_enabled": {
+    "message": "Sidebar tag badges enabled.",
+    "description": "Success message for enabling Twitch sidebar tag badges."
+  },
+  "options_sidebar_tags_disabled": {
+    "message": "Sidebar tag badges disabled.",
+    "description": "Success message for disabling Twitch sidebar tag badges."
+  },
+  "options_sidebar_tags_error": {
+    "message": "Failed to update sidebar tag badges preference.",
+    "description": "Error message shown when the Twitch sidebar tag badge preference fails to save."
   },
   "options_authentication_help": {
     "message": "Disconnecting clears tokens and cached data.",

@@ -27,6 +27,7 @@ const defaultPreferences = Object.freeze({
   notificationsEnabled: false,
   openInCurrentTab: 'never', // 'never', 'always', or 'smart'
   twitchHighlighting: true,
+  twitchSidebarTags: true,
   languageOverride: 'system',
   debugLogging: false,
   notificationMaxStreamAgeMinutes: DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES,

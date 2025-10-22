@@ -45,6 +45,7 @@ export const defaultPreferences = {
   notificationsEnabled: false,
   openInCurrentTab: false,
   twitchHighlighting: true,
+  twitchSidebarTags: true,
   languageOverride: LANGUAGE_SYSTEM,
   debugLogging: false,
 };

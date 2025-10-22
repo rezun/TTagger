@@ -37,6 +37,7 @@ const openTabNever = document.getElementById('open-tab-never');
 const openTabAlways = document.getElementById('open-tab-always');
 const openTabSmart = document.getElementById('open-tab-smart');
 const twitchHighlightingToggle = document.getElementById('twitch-highlighting-toggle');
+const twitchSidebarTagsToggle = document.getElementById('twitch-sidebar-tags-toggle');
 const debugLoggingToggle = document.getElementById('debug-logging-toggle');
 const resetButton = document.getElementById('reset-button');
 const statusEl = document.getElementById('status');
@@ -196,6 +197,10 @@ async function loadNotificationPreference() {
     if (openTabSmart) openTabSmart.checked = openInCurrentTab === 'smart';
 
     twitchHighlightingToggle.checked = preferences.twitchHighlighting !== false;
+    if (twitchSidebarTagsToggle) {
+      twitchSidebarTagsToggle.checked = preferences.twitchSidebarTags !== false;
+      twitchSidebarTagsToggle.disabled = false;
+    }
     if (debugLoggingToggle) {
       debugLoggingToggle.checked = !!preferences.debugLogging;
       debugLoggingToggle.disabled = false;
@@ -226,6 +231,10 @@ async function loadNotificationPreference() {
     }
     if (debugLoggingToggle) {
       debugLoggingToggle.checked = false;
+    }
+    if (twitchSidebarTagsToggle) {
+      twitchSidebarTagsToggle.checked = true;
+      twitchSidebarTagsToggle.disabled = true;
     }
   }
 }
@@ -371,6 +380,26 @@ async function handleTwitchHighlightingToggle() {
     showStatus(message, 'success');
   } catch (error) {
     const message = error?.message || t('options_highlighting_error');
+    handleUserError(error, message);
+    showStatus(message, 'danger');
+    await loadNotificationPreference();
+  }
+}
+
+async function handleTwitchSidebarTagsToggle() {
+  if (!twitchSidebarTagsToggle) return;
+  hideStatus();
+  try {
+    const enabled = twitchSidebarTagsToggle.checked;
+    await invoke('preferences:update', {
+      preferences: { twitchSidebarTags: enabled }
+    });
+    const message = enabled
+      ? t('options_sidebar_tags_enabled')
+      : t('options_sidebar_tags_disabled');
+    showStatus(message, 'success');
+  } catch (error) {
+    const message = error?.message || t('options_sidebar_tags_error');
     handleUserError(error, message);
     showStatus(message, 'danger');
     await loadNotificationPreference();
@@ -565,6 +594,7 @@ function init() {
   openTabAlways?.addEventListener('change', handleOpenInCurrentTabToggle);
   openTabSmart?.addEventListener('change', handleOpenInCurrentTabToggle);
   twitchHighlightingToggle.addEventListener('change', handleTwitchHighlightingToggle);
+  twitchSidebarTagsToggle?.addEventListener('change', handleTwitchSidebarTagsToggle);
   debugLoggingToggle?.addEventListener('change', handleDebugLoggingToggle);
   resetButton?.addEventListener('click', handleReset);
   refreshLogButton.addEventListener('click', loadUpdateLog);

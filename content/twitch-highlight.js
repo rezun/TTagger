@@ -8,6 +8,9 @@
 // Constants
 const STARRED_TAG_ID = 'favorite';
 const HIGHLIGHT_CLASS = 'ttagger-starred';
+const TAG_CONTAINER_CLASS = 'ttagger-sidebar-tag-badges';
+const TAG_BADGE_CLASS = 'ttagger-sidebar-tag-badge';
+const DEFAULT_BADGE_COLOR = '#6f42c1';
 const DEBOUNCE_DELAY = 300;
 let LOG_DEBUG = false;
 const DEBUG_PREFIX = '[TTagger Highlight]';
@@ -17,6 +20,8 @@ let starredStreamerIds = new Set(); // Twitch user IDs
 let starredUsernames = new Set(); // Lowercase usernames
 let processingTimeout = null;
 let highlightingEnabled = true; // Whether highlighting is enabled
+let sidebarTagsEnabled = true; // Whether tag badges are enabled
+let streamerTagMap = new Map(); // login (lowercase) -> Array<{ id, name, abbr }>
 
 function setDebugLogging(enabled) {
   LOG_DEBUG = !!enabled;
@@ -31,6 +36,69 @@ function debug(...args) {
 }
 
 /**
+ * Create a compact uppercase abbreviation for a tag name.
+ * @param {string} name
+ * @returns {string}
+ */
+function abbreviateTagName(name) {
+  if (!name || typeof name !== 'string') {
+    return '';
+  }
+
+  const compact = name.replace(/\s+/g, '').trim();
+  if (!compact) {
+    return '';
+  }
+
+  return compact.slice(0, 2).toUpperCase();
+}
+
+/**
+ * Normalize a potential tag color into a 6-digit hex.
+ * Falls back to DEFAULT_BADGE_COLOR when invalid.
+ * @param {string} color
+ * @returns {string}
+ */
+function resolveTagColor(color) {
+  if (typeof color !== 'string') {
+    return DEFAULT_BADGE_COLOR;
+  }
+  const trimmed = color.trim();
+  if (!trimmed) return DEFAULT_BADGE_COLOR;
+  const match = trimmed.match(/^#?([0-9a-fA-F]{6})$/);
+  if (!match) return DEFAULT_BADGE_COLOR;
+  return `#${match[1].toLowerCase()}`;
+}
+
+/**
+ * Provide a contrasting text color for a badge background.
+ * @param {string} background
+ * @returns {string}
+ */
+function getContrastingTextColor(background) {
+  const resolved = resolveTagColor(background);
+  const r = parseInt(resolved.slice(1, 3), 16) / 255;
+  const g = parseInt(resolved.slice(3, 5), 16) / 255;
+  const b = parseInt(resolved.slice(5, 7), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.57 ? '#1f1f23' : '#ffffff';
+}
+
+/**
+ * Resolve the Twitch username associated with a sidebar card.
+ * @param {Element} cardElement
+ * @returns {string|null}
+ */
+function getCardUsername(cardElement) {
+  if (!cardElement) return null;
+  const linkElement = cardElement.querySelector('a[href^="/"]');
+  if (!linkElement) return null;
+
+  const href = linkElement.getAttribute('href');
+  return extractUsername(href);
+}
+
+/**
  * Fetch the highlighting enabled preference from storage
  */
 async function fetchHighlightingPreference() {
@@ -38,11 +106,13 @@ async function fetchHighlightingPreference() {
     const result = await chrome.storage.sync.get('preferences');
     const preferences = result.preferences || {};
     highlightingEnabled = preferences.twitchHighlighting !== false;
+    sidebarTagsEnabled = preferences.twitchSidebarTags !== false;
     setDebugLogging(preferences.debugLogging === true);
     return highlightingEnabled;
   } catch (error) {
     console.error('[TTagger] Error fetching highlighting preference:', error);
     LOG_DEBUG = false;
+    sidebarTagsEnabled = true;
     return true; // Default to enabled
   }
 }
@@ -57,8 +127,9 @@ async function fetchStarredStreamers() {
 
     // First get the starred IDs from tagState (stored in sync)
     const syncResult = await chrome.storage.sync.get('tagState');
-    const tagState = syncResult.tagState || { assignments: {} };
+    const tagState = syncResult.tagState || { assignments: {}, tags: {} };
     const assignments = tagState.assignments || {};
+    const tagsById = tagState.tags || {};
 
     // Get the follow cache which has the ID-to-username mapping
     const followCache = result.followCache || {};
@@ -72,21 +143,50 @@ async function fetchStarredStreamers() {
       }
     }
 
-    // Convert IDs to usernames using the follow cache
+    // Convert IDs to usernames using the follow cache and build tag mapping
     const usernames = new Set();
+    const loginToBadges = new Map();
     for (const streamer of streamers) {
+      if (!streamer || !streamer.login) continue;
+
+      const login = streamer.login.toLowerCase();
+
       if (starredIds.has(streamer.id)) {
-        const username = streamer.login.toLowerCase();
-        usernames.add(username);
+        usernames.add(login);
+      }
+
+      const assignedTags = assignments[streamer.id];
+      if (Array.isArray(assignedTags) && assignedTags.length > 0) {
+        const badges = [];
+        for (const tagId of assignedTags) {
+          if (!tagId) continue;
+          if (tagId === STARRED_TAG_ID) continue;
+          const tag = tagsById[tagId] || {};
+          const tagName = typeof tag.name === 'string' ? tag.name : '';
+          const customName = typeof tag.customName === 'string' ? tag.customName : '';
+          const displayName = (tagName && tagName.trim()) || (customName && customName.trim());
+          if (!displayName) continue;
+          const abbr = abbreviateTagName(displayName);
+          if (!abbr) continue;
+          const badgeColor = resolveTagColor(tag.color);
+          const badgeId = tag.id || tagId;
+          badges.push({ id: badgeId, name: displayName, abbr, color: badgeColor });
+        }
+        if (badges.length > 0) {
+          loginToBadges.set(login, badges);
+        }
       }
     }
 
     starredStreamerIds = starredIds;
     starredUsernames = usernames;
+    streamerTagMap = loginToBadges;
+    debug('Cached tag badges for', loginToBadges.size, 'streamers');
 
     return usernames;
   } catch (error) {
     console.error('[TTagger] Error fetching starred streamers:', error);
+    streamerTagMap = new Map();
     return new Set();
   }
 }
@@ -121,21 +221,84 @@ function extractUsername(href) {
 }
 
 /**
- * Check if a sidebar card element represents a starred streamer
- * @param {Element} cardElement - The side-nav-card element
- * @returns {boolean}
+ * Apply or remove the highlight class for a sidebar card avatar.
+ * @param {Element} cardElement
+ * @param {string|null} username
  */
-function isStarredStreamer(cardElement) {
-  // Find the link element that contains the streamer URL
-  const linkElement = cardElement.querySelector('a[href^="/"]');
-  if (!linkElement) return false;
+function updateAvatarHighlight(cardElement, username) {
+  if (!cardElement) return;
 
-  const href = linkElement.getAttribute('href');
-  const username = extractUsername(href);
+  let avatarContainer = cardElement.querySelector('.side-nav-card__avatar');
 
-  if (!username) return false;
+  if (!avatarContainer) {
+    const link = cardElement.querySelector('.side-nav-card__link');
+    if (link) {
+      avatarContainer = link.querySelector(':scope > div:first-child');
+    }
+  }
 
-  return starredUsernames.has(username);
+  if (!avatarContainer) {
+    return;
+  }
+
+  if (!highlightingEnabled || !username || !starredUsernames.has(username)) {
+    avatarContainer.classList.remove(HIGHLIGHT_CLASS);
+    return;
+  }
+
+  avatarContainer.classList.add(HIGHLIGHT_CLASS);
+}
+
+/**
+ * Render or remove compact tag badges for a sidebar card.
+ * @param {Element} cardElement
+ * @param {string|null} username
+ */
+function updateTagBadges(cardElement, username) {
+  if (!cardElement) return;
+
+  const existingContainer = cardElement.querySelector(`.${TAG_CONTAINER_CLASS}`);
+
+  if (!sidebarTagsEnabled || !username) {
+    if (existingContainer) existingContainer.remove();
+    return;
+  }
+
+  const badges = streamerTagMap.get(username);
+  if (!badges || badges.length === 0) {
+    if (existingContainer) existingContainer.remove();
+    return;
+  }
+
+  let container = existingContainer;
+  if (!container) {
+    const metadataContainer = cardElement.querySelector('[data-a-target="side-nav-card-metadata"]');
+    if (!metadataContainer) return;
+    container = document.createElement('div');
+    container.className = TAG_CONTAINER_CLASS;
+    metadataContainer.appendChild(container);
+  }
+
+  const badgeKey = badges.map(badge => `${badge.id}:${badge.abbr}:${badge.color}`).join(',');
+  if (container.dataset.badgeKey === badgeKey) {
+    return;
+  }
+
+  container.textContent = '';
+  badges.forEach(badge => {
+    const badgeElement = document.createElement('span');
+    badgeElement.className = TAG_BADGE_CLASS;
+    badgeElement.textContent = badge.abbr;
+    const bgColor = badge.color || DEFAULT_BADGE_COLOR;
+    badgeElement.style.backgroundColor = bgColor;
+    badgeElement.style.color = getContrastingTextColor(bgColor);
+    badgeElement.style.borderColor = bgColor;
+    if (badge.name) {
+      badgeElement.title = badge.name;
+    }
+    container.appendChild(badgeElement);
+  });
+  container.dataset.badgeKey = badgeKey;
 }
 
 /**
@@ -146,34 +309,9 @@ function updateHighlighting() {
   const sidebarCards = document.querySelectorAll('.side-nav-card');
 
   sidebarCards.forEach(card => {
-    // Try to find the normal avatar container first
-    let avatarContainer = card.querySelector('.side-nav-card__avatar');
-
-    // If not found, this might be a guest stream (co-stream) which has a different structure
-    // In that case, the first child div of the link is the wrapper we want to highlight
-    if (!avatarContainer) {
-      const link = card.querySelector('.side-nav-card__link');
-      if (link) {
-        // Get the first direct child div which is the avatar wrapper for guest streams
-        avatarContainer = link.querySelector(':scope > div:first-child');
-      }
-    }
-
-    if (avatarContainer) {
-      // If highlighting is disabled, remove all highlights
-      if (!highlightingEnabled) {
-        avatarContainer.classList.remove(HIGHLIGHT_CLASS);
-        return;
-      }
-
-      // Otherwise, apply highlighting based on starred status
-      const shouldHighlight = isStarredStreamer(card);
-      if (shouldHighlight) {
-        avatarContainer.classList.add(HIGHLIGHT_CLASS);
-      } else {
-        avatarContainer.classList.remove(HIGHLIGHT_CLASS);
-      }
-    }
+    const username = getCardUsername(card);
+    updateAvatarHighlight(card, username);
+    updateTagBadges(card, username);
   });
 }
 
@@ -254,6 +392,14 @@ function setupStorageListener() {
       // Preferences changed, check if highlighting was toggled
       if (changes.preferences) {
         fetchHighlightingPreference().then(() => {
+          updateHighlighting();
+        });
+      }
+    }
+
+    if (areaName === 'local') {
+      if (changes.followCache) {
+        fetchStarredStreamers().then(() => {
           updateHighlighting();
         });
       }

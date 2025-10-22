@@ -403,12 +403,28 @@
     "description": "Radio button label for smart stream opening behavior."
   },
   "options_twitch_integration_help": {
-    "message": "Markiere Favoriten auf Twitch.tv mit einem goldenen Ring um ihren Avatar.",
+    "message": "Markiere Favoriten auf Twitch.tv mit einem goldenen Ring und kompakten Tag-Badges.",
     "description": "Helper text explaining Twitch integration."
   },
   "options_twitch_integration_toggle": {
     "message": "Favoriten auf Twitch.tv hervorheben",
     "description": "Label for the Twitch highlighting toggle."
+  },
+  "options_twitch_sidebar_tags_toggle": {
+    "message": "Tag-Badges neben Streamern anzeigen",
+    "description": "Label for the Twitch sidebar tag badges toggle."
+  },
+  "options_sidebar_tags_enabled": {
+    "message": "Tag-Badges in der Seitenleiste aktiviert.",
+    "description": "Success message for enabling Twitch sidebar tag badges."
+  },
+  "options_sidebar_tags_disabled": {
+    "message": "Tag-Badges in der Seitenleiste deaktiviert.",
+    "description": "Success message for disabling Twitch sidebar tag badges."
+  },
+  "options_sidebar_tags_error": {
+    "message": "Einstellung für Tag-Badges in der Seitenleiste konnte nicht gespeichert werden.",
+    "description": "Error message shown when the Twitch sidebar tag badge preference fails to save."
   },
   "options_authentication_help": {
     "message": "Das Trennen löscht Tokens und Zwischenspeicher.",
