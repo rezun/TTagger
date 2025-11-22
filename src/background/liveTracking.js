@@ -377,6 +377,7 @@ async function runLiveCheck() {
     const streamers = cache[CACHE_ITEMS_KEY];
     const starredStreamers = streamers.filter((streamer) => assignments[streamer.id]?.includes('favorite'));
     const starredIds = new Set(starredStreamers.map((streamer) => streamer.id));
+    const notificationPromises = [];
 
     for (const streamer of starredStreamers) {
       const previousEntry = liveState.get(streamer.id) || { isLive: false, startedAt: null };
@@ -400,11 +401,15 @@ async function runLiveCheck() {
         }
 
         const streamUrl = `https://www.twitch.tv/${streamer.login}`;
-        try {
-          await createLiveNotification(streamer.displayName, streamUrl, streamer.avatarUrl);
-        } catch (error) {
-          console.error('Failed to create live notification', streamer.id, error);
-        }
+        notificationPromises.push(
+          (async () => {
+            try {
+              await createLiveNotification(streamer.displayName, streamUrl, streamer.avatarUrl);
+            } catch (error) {
+              console.error('Failed to create live notification', streamer.id, error);
+            }
+          })(),
+        );
       }
 
       liveState.set(streamer.id, {
@@ -417,6 +422,10 @@ async function runLiveCheck() {
       if (!starredIds.has(streamerId)) {
         liveState.delete(streamerId);
       }
+    }
+
+    if (notificationPromises.length > 0) {
+      await Promise.allSettled(notificationPromises);
     }
 
     await saveLiveState();
