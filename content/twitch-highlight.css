@@ -19,18 +19,27 @@
  */
 .ttagger-starred {
   position: relative !important;
-  padding: 3px !important;
-  background: var(--ttagger-highlight-ring, linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%)) !important;
-  border-radius: 50% !important;
-  box-sizing: content-box !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
 
-  /* Subtle glow effect for better visibility */
-  filter: drop-shadow(0 0 8px var(--ttagger-highlight-shadow, rgba(255, 215, 0, 0.7))) !important;
+.ttagger-starred::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: var(--ttagger-highlight-ring, linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%)) !important;
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--ttagger-highlight-shadow, rgba(255, 215, 0, 0.7)) !important;
+  z-index: 0;
 }
 
 /* Enhanced glow on hover for interactivity feedback */
-.ttagger-starred:hover {
-  filter: drop-shadow(0 0 12px var(--ttagger-highlight-shadow-hover, rgba(255, 215, 0, 0.9))) !important;
+.ttagger-starred:hover::before {
+  box-shadow: 0 0 12px var(--ttagger-highlight-shadow-hover, rgba(255, 215, 0, 0.9)) !important;
 }
 
 /*
@@ -39,6 +48,8 @@
 .ttagger-starred .tw-image-avatar {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
   border-radius: 50% !important;
+  position: relative;
+  z-index: 1;
 }
 
 /* Ensure the effect works with Twitch's existing avatar styles */
@@ -53,13 +64,13 @@
  */
 
 /* Light theme detection using Twitch's theme class */
-.tw-root--theme-light .ttagger-starred {
-  filter: drop-shadow(0 0 10px var(--ttagger-highlight-shadow-light, rgba(184, 134, 11, 1))) !important;
+.tw-root--theme-light .ttagger-starred::before {
+  box-shadow: 0 0 10px var(--ttagger-highlight-shadow-light, rgba(184, 134, 11, 1)) !important;
   background: var(--ttagger-highlight-ring-light, linear-gradient(135deg, #b8860b 0%, #daa520 50%, #b8860b 100%)) !important;
 }
 
-.tw-root--theme-light .ttagger-starred:hover {
-  filter: drop-shadow(0 0 14px var(--ttagger-highlight-shadow-hover-light, rgba(184, 134, 11, 1))) !important;
+.tw-root--theme-light .ttagger-starred:hover::before {
+  box-shadow: 0 0 14px var(--ttagger-highlight-shadow-hover-light, rgba(184, 134, 11, 1)) !important;
 }
 
 .tw-root--theme-light .ttagger-starred .tw-image-avatar {
