@@ -1,7 +1,7 @@
 import { extension, setBadgeBackgroundColor, setBadgeText } from '../util/extension.js';
 import { createLiveNotification } from '../util/notifications.js';
 import { FOLLOW_CACHE_TTL_MS } from '../config.js';
-import { getPreferences, getTagState, addUpdateLogEntry, constants as storageConstants } from '../storage/index.js';
+import { getPreferences, getTagState, addUpdateLogEntry, setPopupSnapshot, constants as storageConstants } from '../storage/index.js';
 import { normalizeTagState } from './tagState.js';
 import { refreshFollowCache, CACHE_ITEMS_KEY } from './followCache.js';
 import { getAuthStatus } from '../../background/oauth.js';
@@ -434,6 +434,18 @@ async function runLiveCheck() {
     const cacheAge = Date.now() - cache.fetchedAt;
     const liveCount = getLiveStarredCount();
     const starredCount = starredStreamers.length;
+
+    try {
+      await setPopupSnapshot({
+        hasAuth: true,
+        follows: streamers,
+        tagState,
+        preferences,
+        fetchedAt: cache.fetchedAt,
+      });
+    } catch (error) {
+      console.warn('Failed to update popup snapshot from live check:', error);
+    }
 
     return {
       success: true,
