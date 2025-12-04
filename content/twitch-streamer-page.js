@@ -785,6 +785,11 @@
       dropdownMenu.style.left = `${rect.left}px`;
     };
 
+    const closeDropdown = () => {
+      dropdownMenu.style.display = 'none';
+      resetCreateTagForm(dropdownMenu);
+    };
+
     // Toggle dropdown on button click
     dropdownBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -792,8 +797,7 @@
       const isVisible = dropdownMenu.style.display !== 'none';
 
       if (isVisible) {
-        dropdownMenu.style.display = 'none';
-        resetCreateTagForm(dropdownMenu);
+        closeDropdown();
       } else {
         dropdownMenu.style.display = 'block';
         positionDropdown();
@@ -801,12 +805,18 @@
     });
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!section.contains(e.target)) {
-        dropdownMenu.style.display = 'none';
-        resetCreateTagForm(dropdownMenu);
+    const handleOutsideClick = (e) => {
+      if (dropdownMenu.style.display === 'none') return;
+
+      const target = e.target;
+      if (dropdownMenu.contains(target) || dropdownBtn.contains(target)) {
+        return;
       }
-    });
+
+      closeDropdown();
+    };
+
+    document.addEventListener('click', handleOutsideClick, true);
 
     // Reposition dropdown on scroll/resize
     const repositionOnScroll = () => {
