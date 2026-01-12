@@ -71,6 +71,51 @@
   let urlChangeObserver = null;
   let storageListener = null;
 
+  function hasStarButton() {
+    return !!document.querySelector('.ttagger-star-container');
+  }
+
+  function hasTagsSection() {
+    return !!document.querySelector('[data-ttagger-tags]');
+  }
+
+  /**
+   * Whether both injected UI elements are currently present in the DOM.
+   * Used to guard against Twitch re-rendering the header after we inject.
+   * @returns {boolean}
+   */
+  function hasInjectedUi() {
+    return hasStarButton() && hasTagsSection();
+  }
+
+  /**
+   * Ensure our UI exists when it should, restarting injection attempts if not.
+   * @param {string} reason
+   */
+  function ensureUiPresence(reason = '') {
+    if (!isFollowed || !currentStreamerUsername) return;
+    if (hasInjectedUi()) return;
+
+    if (reason) {
+      debug('UI missing; reinjecting due to', reason);
+    } else {
+      debug('UI missing; reinjecting');
+    }
+
+    const starPresent = hasStarButton();
+    const tagsPresent = hasTagsSection();
+
+    if (starPresent && !tagsPresent) {
+      injectTagsSection();
+      startInjectionCheck();
+      return;
+    }
+
+    uiInjected = false;
+    injectUI();
+    startInjectionCheck();
+  }
+
   /**
    * Normalize a hex color string to #rrggbb format.
    * @param {string} color
@@ -944,6 +989,38 @@
   }
 
   /**
+   * Inject only the tags section below the game link.
+   * @returns {boolean} true when tags were injected
+   */
+  function injectTagsSection() {
+    debug('Looking for game link to inject tags section...');
+    const gameLink = document.querySelector('[data-a-target="stream-game-link"]');
+    if (!gameLink) {
+      debug('Game link not found');
+      return false;
+    }
+    debug('Game link found');
+    const tagsSection = createTagsSection();
+
+    const tagsAnchor =
+      gameLink.closest('[data-target="stream-info-card-component"]')
+      || gameLink.closest('[data-test-selector="stream-info-card-component"]')
+      || gameLink.closest('[data-target="stream-info-card"]')
+      || gameLink.parentElement?.parentElement
+      || gameLink.parentElement;
+
+    if (tagsAnchor && tagsAnchor.parentElement) {
+      debug('Injecting tags section after game link container');
+      tagsAnchor.parentElement.insertBefore(tagsSection, tagsAnchor.nextSibling);
+      debug('Tags section injected');
+      return true;
+    }
+
+    debug('No suitable tags anchor found near game link');
+    return false;
+  }
+
+  /**
    * Inject UI elements into the page
    */
   function injectUI() {
@@ -955,6 +1032,13 @@
       return;
     }
 
+    // Clean up stale tags before reinjecting to avoid duplicates
+    const existingTags = document.querySelector('[data-ttagger-tags]');
+    if (existingTags) {
+      debug('Removing stale tags section before reinjection');
+      existingTags.remove();
+    }
+
     if (!isFollowed) {
       debug('Streamer not followed, skipping UI injection');
       return;
@@ -964,54 +1048,42 @@
     debug('Looking for unfollow button...');
     const unfollowButton = document.querySelector('[data-a-target="unfollow-button"]');
     if (!unfollowButton) {
-      debug('Unfollow button not found');
+      debug('Unfollow button not found during inject attempt');
       return;
     }
     debug('Unfollow button found');
 
-    const buttonContainer = unfollowButton.closest('.Layout-sc-1xcs6mc-0.dCFkna');
-    if (!buttonContainer || !buttonContainer.parentElement) {
-      debug('Button container not found or has no parent');
-      return;
-    }
-    debug('Button container found');
-
     // Inject star button
     debug('Creating and injecting star button...');
+    let starInjected = false;
     const starButton = createStarButton();
     const starContainer = document.createElement('div');
-    starContainer.className = 'Layout-sc-1xcs6mc-0 dCFkna ttagger-star-container';
+    starContainer.className = 'ttagger-star-container';
     starContainer.appendChild(starButton);
-    buttonContainer.parentElement.insertBefore(starContainer, buttonContainer);
+
+    const buttonMount =
+      unfollowButton.closest('[data-target="channel-header-right"]')
+      || unfollowButton.closest('[data-test-selector="follow-button"]')
+      || unfollowButton.parentElement;
+
+    if (buttonMount && buttonMount.parentElement) {
+      debug('Injecting star button before unfollow button');
+      unfollowButton.insertAdjacentElement('beforebegin', starContainer);
+      starInjected = true;
+    } else if (unfollowButton.parentElement) {
+      debug('Fallback inject: inserting star button before unfollow button in parent');
+      unfollowButton.parentElement.insertBefore(starContainer, unfollowButton);
+      starInjected = true;
+    } else {
+      debug('Unable to find mount point for star button');
+      return;
+    }
     debug('Star button injected');
 
-    // Find the tags section (below stream game link)
-    debug('Looking for game link to inject tags section...');
-    const gameLink = document.querySelector('[data-a-target="stream-game-link"]');
-    if (gameLink) {
-      debug('Game link found');
-      const tagsRow = gameLink.closest('.Layout-sc-1xcs6mc-0.eCOVmB')?.parentElement;
-      if (tagsRow) {
-        debug('Tags row found');
-        const tagsSection = createTagsSection();
-        // Insert after the Twitch tags
-        const twitchTagsContainer = tagsRow.querySelector('.Layout-sc-1xcs6mc-0.kEIdxC');
-        if (twitchTagsContainer && twitchTagsContainer.parentElement) {
-          debug('Twitch tags container found, appending custom tags section');
-          twitchTagsContainer.parentElement.appendChild(tagsSection);
-          debug('Tags section injected');
-        } else {
-          debug('Twitch tags container not found');
-        }
-      } else {
-        debug('Tags row not found');
-      }
-    } else {
-      debug('Game link not found');
-    }
+    const tagsInjected = injectTagsSection();
 
-    uiInjected = true;
-    debug('UI injection complete for streamer:', currentStreamerUsername);
+    uiInjected = starInjected || tagsInjected;
+    debug('UI injection complete for streamer:', currentStreamerUsername, 'star:', starInjected, 'tags:', tagsInjected);
   }
 
   /**
@@ -1209,6 +1281,10 @@
       const wasFollowed = isFollowed;
       isFollowed = checkFollowState();
 
+      if (isFollowed) {
+        ensureUiPresence('follow button mutation');
+      }
+
       if (wasFollowed !== isFollowed) {
         debug('Follow state changed:', isFollowed);
         if (isFollowed) {
@@ -1265,6 +1341,10 @@
         const wasFollowed = isFollowed;
         isFollowed = checkFollowState();
 
+        if (isFollowed) {
+          ensureUiPresence('follow cache change');
+        }
+
         if (wasFollowed !== isFollowed) {
           if (isFollowed) {
             injectUI();
@@ -1281,7 +1361,7 @@
   }
 
   /**
-   * Try to inject UI periodically until successful or timeout
+   * Try to inject UI periodically until it is present.
    */
   function startInjectionCheck() {
     if (checkInterval) {
@@ -1289,34 +1369,31 @@
       clearInterval(checkInterval);
     }
 
-    let attempts = 0;
-    const maxAttempts = 20; // 10 seconds total
-
-    debug('Starting injection check (will try up to', maxAttempts, 'times)');
-
     checkInterval = setInterval(() => {
-      attempts++;
-      debug(`Injection attempt ${attempts}/${maxAttempts}`);
+      const starPresent = hasStarButton();
+      const tagsPresent = hasTagsSection();
 
-      if (uiInjected) {
-        debug('UI already injected, stopping checks');
-        clearInterval(checkInterval);
-        checkInterval = null;
-        return;
-      }
-
-      if (attempts >= maxAttempts) {
-        debug('Max attempts reached, stopping checks');
-        clearInterval(checkInterval);
-        checkInterval = null;
-        return;
-      }
-
-      if (isFollowed) {
-        injectUI();
-      } else {
+      if (!isFollowed) {
         debug('Streamer not followed, skipping injection attempt');
+        return;
       }
+
+      if (starPresent && tagsPresent) {
+        uiInjected = true;
+        debug('UI present; stopping injection check interval');
+        clearInterval(checkInterval);
+        checkInterval = null;
+        return;
+      }
+
+      if (starPresent && !tagsPresent) {
+        debug('Star button present but tags missing; attempting to inject tags only');
+        injectTagsSection();
+        return;
+      }
+
+      uiInjected = false;
+      injectUI();
     }, CHECK_INTERVAL);
   }
 
