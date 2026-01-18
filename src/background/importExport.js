@@ -1,6 +1,7 @@
 import { getTagState, setTagState } from '../storage/index.js';
 import { normalizeTagState, resetTagStateToDefault, pickTagColor, STARRED_TAG_ID } from './tagState.js';
 import { isValidTagName, sanitizeTagName, isValidHexColor } from '../util/validators.js';
+import { sortTagsByOrder } from '../util/sorting.js';
 
 function serializeTagForExport(tag) {
   const entry = { name: tag.name };
@@ -122,26 +123,6 @@ function normalizeImportedStarred(rawStarred = []) {
   );
 }
 
-function sortImportedTags(tags) {
-  return tags
-    .slice()
-    .sort((a, b) => {
-      const aOrder = Number(a?.sortOrder);
-      const bOrder = Number(b?.sortOrder);
-      const aHas = Number.isFinite(aOrder);
-      const bHas = Number.isFinite(bOrder);
-      if (aHas && bHas && aOrder !== bOrder) {
-        return aOrder - bOrder;
-      }
-      if (aHas && !bHas) return -1;
-      if (!aHas && bHas) return 1;
-      const aName = a?.name || '';
-      const bName = b?.name || '';
-      const nameCompare = aName.localeCompare(bName);
-      if (nameCompare !== 0) return nameCompare;
-      return 0;
-    });
-}
 
 /**
  * Validate import payload structure before processing
@@ -214,7 +195,7 @@ export async function handleImport(payload) {
   validateImportPayload(payload);
 
   const rawTags = normalizeImportedTags(payload.tags);
-  const tags = sortImportedTags(rawTags);
+  const tags = sortTagsByOrder(rawTags);
   const assignments = normalizeImportedAssignments(payload.assignments);
   const starred = normalizeImportedStarred(payload.starred);
 

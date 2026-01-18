@@ -57,10 +57,11 @@ export async function buildFollowSnapshot(token, userId) {
   } while (cursor);
 
   const ids = [...new Set(follows.map((item) => item.broadcaster_id))];
-  const users = ids.length ? await fetchUsersByIds(token, ids) : [];
+  const [users, streams] = await Promise.all([
+    ids.length ? fetchUsersByIds(token, ids) : [],
+    ids.length ? fetchStreamsByUserIds(token, ids) : [],
+  ]);
   const userMap = new Map(users.map((user) => [user.id, user]));
-
-  const streams = ids.length ? await fetchStreamsByUserIds(token, ids) : [];
   const streamMap = new Map(streams.map((stream) => [stream.user_id, stream]));
 
   // Get last seen live data

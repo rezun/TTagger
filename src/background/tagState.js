@@ -2,6 +2,7 @@ import { getTagState, setTagState } from '../storage/index.js';
 import { normalizeTagColor } from '../util/formatters.js';
 import { TAG_COLOR_POOL } from '../config.js';
 import { sanitizeTagName, isValidTagName } from '../util/validators.js';
+import { compareTagsByOrderWithCreatedAt } from '../util/sorting.js';
 
 const STARRED_TAG_ID = 'favorite';
 const STARRED_TAG_NAME = '⭐ Starred';
@@ -72,36 +73,12 @@ function toNumber(value) {
 
 function ensureSortOrder(state) {
   const tags = Object.values(state.tags || {});
-  const sortable = tags
-    .filter((tag) => tag && String(tag.id) !== STARRED_TAG_ID)
-    .map((tag) => {
-      const order = toNumber(tag.sortOrder);
-      const createdAt = tag.createdAt ? Date.parse(tag.createdAt) || null : null;
-      return { tag, order, createdAt };
-    });
+  const sortable = tags.filter((tag) => tag && String(tag.id) !== STARRED_TAG_ID);
 
-  sortable.sort((a, b) => {
-    if (a.order != null && b.order != null) {
-      if (a.order === b.order) {
-        return String(a.tag.id).localeCompare(String(b.tag.id));
-      }
-      return a.order - b.order;
-    }
-    if (a.order != null) return -1;
-    if (b.order != null) return 1;
-    if (a.createdAt != null && b.createdAt != null) {
-      if (a.createdAt === b.createdAt) {
-        return String(a.tag.id).localeCompare(String(b.tag.id));
-      }
-      return a.createdAt - b.createdAt;
-    }
-    if (a.createdAt != null) return -1;
-    if (b.createdAt != null) return 1;
-    return String(a.tag.id).localeCompare(String(b.tag.id));
-  });
+  sortable.sort(compareTagsByOrderWithCreatedAt);
 
-  sortable.forEach((entry, index) => {
-    entry.tag.sortOrder = index + 1;
+  sortable.forEach((tag, index) => {
+    tag.sortOrder = index + 1;
   });
 
   const favorite = state.tags[STARRED_TAG_ID];
@@ -425,29 +402,7 @@ export async function reorderTags(tagIds = []) {
 
     const remaining = Object.values(state.tags)
       .filter((tag) => tag && String(tag.id) !== STARRED_TAG_ID && !seen.has(String(tag.id)))
-      .sort((a, b) => {
-        const aOrder = toNumber(a.sortOrder);
-        const bOrder = toNumber(b.sortOrder);
-        if (aOrder != null && bOrder != null) {
-          if (aOrder === bOrder) {
-            return String(a.id).localeCompare(String(b.id));
-          }
-          return aOrder - bOrder;
-        }
-        if (aOrder != null) return -1;
-        if (bOrder != null) return 1;
-        const aCreated = a.createdAt ? Date.parse(a.createdAt) || null : null;
-        const bCreated = b.createdAt ? Date.parse(b.createdAt) || null : null;
-        if (aCreated != null && bCreated != null) {
-          if (aCreated === bCreated) {
-            return String(a.id).localeCompare(String(b.id));
-          }
-          return aCreated - bCreated;
-        }
-        if (aCreated != null) return -1;
-        if (bCreated != null) return 1;
-        return String(a.id).localeCompare(String(b.id));
-      });
+      .sort(compareTagsByOrderWithCreatedAt);
 
     remaining.forEach((tag) => {
       tag.sortOrder = position++;

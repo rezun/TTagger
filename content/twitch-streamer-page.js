@@ -70,6 +70,7 @@
   let followButtonObserver = null;
   let urlChangeObserver = null;
   let storageListener = null;
+  let isProcessingFollow = false;
 
   function hasStarButton() {
     return !!document.querySelector('.ttagger-star-container');
@@ -225,6 +226,16 @@
       debug('Cleared injection check interval');
     }
 
+    // Remove tracked event listeners
+    const listenerCount = eventListeners.length;
+    for (const { target, type, listener, options } of eventListeners) {
+      target.removeEventListener(type, listener, options);
+    }
+    eventListeners.length = 0;
+    if (listenerCount > 0) {
+      debug('Removed', listenerCount, 'tracked event listeners');
+    }
+
     // Disconnect all tracked observers that are scoped to the current streamer
     const observerCount = observers.length;
     observers.forEach(observer => observer.disconnect());
@@ -238,6 +249,13 @@
       followButtonObserver.disconnect();
       followButtonObserver = null;
       debug('Disconnected follow button observer');
+    }
+
+    // Remove storage listener
+    if (storageListener) {
+      chrome.storage.onChanged.removeListener(storageListener);
+      storageListener = null;
+      debug('Removed storage listener');
     }
 
     debug('Per-streamer cleanup complete');
@@ -1145,54 +1163,60 @@
    * Watch for follow button click and add streamer to cache when followed
    */
   async function handleFollowButtonClick() {
-    if (!currentStreamerUsername) return;
+    if (isProcessingFollow) return;
+    isProcessingFollow = true;
+    try {
+      if (!currentStreamerUsername) return;
 
-    const MAX_RETRIES = 5;
-    const RETRY_DELAY = 2000; // 2 seconds
-    let detected = false;
+      const MAX_RETRIES = 5;
+      const RETRY_DELAY = 2000; // 2 seconds
+      let detected = false;
 
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      debug(`Follow detection attempt ${attempt}/${MAX_RETRIES}...`);
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        debug(`Follow detection attempt ${attempt}/${MAX_RETRIES}...`);
 
-      // Wait for Twitch to process the follow
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        // Wait for Twitch to process the follow
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
 
-      // Check if we now have an unfollow button (meaning user just followed)
-      const unfollowButton = document.querySelector('[data-a-target="unfollow-button"]');
-      if (unfollowButton && !isFollowed) {
-        debug('User just followed streamer, adding to cache...');
-        detected = true;
+        // Check if we now have an unfollow button (meaning user just followed)
+        const unfollowButton = document.querySelector('[data-a-target="unfollow-button"]');
+        if (unfollowButton && !isFollowed) {
+          debug('User just followed streamer, adding to cache...');
+          detected = true;
 
-        try {
-          // Send message to background to add streamer to cache
-          await chrome.runtime.sendMessage({
-            type: 'follow:add',
-            login: currentStreamerUsername
-          });
+          try {
+            // Send message to background to add streamer to cache
+            await chrome.runtime.sendMessage({
+              type: 'follow:add',
+              login: currentStreamerUsername
+            });
 
-          debug('Streamer added to cache, refreshing data...');
+            debug('Streamer added to cache, refreshing data...');
 
-          // Refresh our local cache
-          await fetchFollowCache();
+            // Refresh our local cache
+            await fetchFollowCache();
 
-          // Update follow state
-          isFollowed = checkFollowState();
+            // Update follow state
+            isFollowed = checkFollowState();
 
-          // Inject UI if now followed
-          if (isFollowed) {
-            debug('Follow state confirmed, injecting UI...');
-            injectUI();
+            // Inject UI if now followed
+            if (isFollowed) {
+              debug('Follow state confirmed, injecting UI...');
+              injectUI();
+            }
+            break;
+          } catch (error) {
+            console.error('[TTagger] Error handling follow:', error);
+            break;
           }
-          break;
-        } catch (error) {
-          console.error('[TTagger] Error handling follow:', error);
-          break;
+        }
+
+        if (attempt === MAX_RETRIES && !detected) {
+          console.warn('[TTagger] Failed to detect follow state change after', MAX_RETRIES, 'attempts. You may need to refresh the page for UI to appear.');
         }
       }
-
-      if (attempt === MAX_RETRIES && !detected) {
-        console.warn('[TTagger] Failed to detect follow state change after', MAX_RETRIES, 'attempts. You may need to refresh the page for UI to appear.');
-      }
+    } finally {
+      isProcessingFollow = false;
     }
   }
 

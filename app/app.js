@@ -1045,6 +1045,9 @@ function attachEventHandlers() {
   // Debounce closeOpenMenus for better performance during scroll/resize
   const debouncedCloseMenus = debounce(closeOpenMenus, 200);
 
+  // Debounce render for filter inputs to avoid lag during rapid typing
+  const debouncedRender = debounce(render, 150);
+
   elements.streamerContainer.addEventListener('scroll', debouncedCloseMenus);
 
   window.addEventListener('resize', debouncedCloseMenus);
@@ -1053,7 +1056,7 @@ function attachEventHandlers() {
     const value = event.target.value;
     mergePreferences({ nameFilter: value });
     elements.clearNameFilter.style.display = value ? 'block' : 'none';
-    render();
+    debouncedRender();
     queuePreferenceSync();
   });
 
@@ -1069,7 +1072,7 @@ function attachEventHandlers() {
     const value = event.target.value;
     mergePreferences({ contentFilter: value });
     elements.clearContentFilter.style.display = value ? 'block' : 'none';
-    render();
+    debouncedRender();
     queuePreferenceSync();
   });
 
