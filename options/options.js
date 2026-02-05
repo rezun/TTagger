@@ -697,6 +697,14 @@ async function handleExportLog() {
   }
 }
 
+function showVersion() {
+  const el = document.getElementById('version-info');
+  if (el) {
+    const { name, version } = chrome.runtime.getManifest();
+    el.textContent = `${name} v${version}`;
+  }
+}
+
 function init() {
   exportButton.addEventListener('click', handleExport);
   importInput.addEventListener('change', (event) => handleImport(event.target.files?.[0]));
@@ -720,6 +728,7 @@ function init() {
   exportLogButton.addEventListener('click', handleExportLog);
   languageSelect?.addEventListener('change', handleLanguageChange);
 
+  showVersion();
   loadNotificationPreference();
   loadUpdateLog();
 }
