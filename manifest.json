@@ -1,0 +1,86 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extension_name__",
+  "description": "__MSG_extension_description__",
+  "version": "1.0.0",
+  "default_locale": "en",
+  "short_name": "__MSG_extension_short_name__",
+  "author": {
+    "name": "Steve Schmidt",
+    "email": "apps@steve-dev.de"
+  },
+  "homepage_url": "https://github.com/rezun/TTagger",
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "__MSG_extension_name__"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "scripts": ["background/service-worker.js"],
+    "type": "module"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "identity",
+    "tabs",
+    "notifications",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://id.twitch.tv/*",
+    "https://api.twitch.tv/*",
+    "*://www.twitch.tv/*",
+    "*://twitch.tv/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.twitch.tv/*",
+        "*://twitch.tv/*"
+      ],
+      "js": [
+        "content/twitch-highlight.js",
+        "content/twitch-streamer-page.js"
+      ],
+      "css": [
+        "content/twitch-highlight.css",
+        "content/twitch-streamer-page.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/util/i18n.js",
+        "_locales/*/messages.json"
+      ],
+      "matches": [
+        "*://www.twitch.tv/*",
+        "*://twitch.tv/*"
+      ]
+    }
+  ],
+  "oauth2": {
+    "client_id": "a9j7abksc8ccs0ujeimo5q2w7dnkrk",
+    "scopes": [
+      "user:read:follows"
+    ]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ttagger@steve-dev.de",
+      "strict_min_version": "109.0"
+    }
+  }
+}

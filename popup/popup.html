@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="app_title">TTagger</title>
+    <link rel="stylesheet" href="../assets/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../styles/popup.css" />
+  </head>
+  <body class="bg-body text-body">
+    <div class="popup-shell">
+      <header class="popup-header">
+        <div class="popup-header-left">
+          <button
+            class="btn btn-outline-secondary btn-icon"
+            id="open-settings"
+            aria-label="Open settings"
+            data-i18n-attrs="aria-label:popup_open_settings"
+          >
+            <svg width="16" height="16" fill="currentColor" aria-hidden="true">
+              <use href="../assets/icons/settings.svg#icon"/>
+            </svg>
+            <span class="visually-hidden" data-i18n="common_settings">Settings</span>
+          </button>
+          <button
+            class="btn btn-outline-secondary btn-icon"
+            id="toggle-notifications"
+            aria-label="Toggle notifications"
+            title="Toggle notifications"
+            data-i18n-attrs="aria-label:popup_toggle_notifications,title:popup_notifications_title"
+          >
+            <svg width="16" height="16" fill="currentColor" aria-hidden="true" id="notification-icon">
+              <use href="../assets/icons/bell.svg#icon"/>
+            </svg>
+            <span class="visually-hidden" data-i18n="popup_notifications_label">Notifications</span>
+          </button>
+        </div>
+        <div class="popup-title">
+          <button
+            type="button"
+            class="btn-reset-filter"
+            id="reset-filter-btn"
+            aria-label="Reset to Starred"
+            title="Reset to Starred"
+            data-i18n-attrs="aria-label:popup_reset_to_starred,title:popup_reset_to_starred"
+          >
+            <img
+              src="../assets/icons/icon48.png"
+              class="popup-title-icon"
+              data-i18n-attrs="alt:app_icon_alt"
+              alt="TTagger icon"
+            />
+          </button>
+          <div class="dropdown label-filter-dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle label-filter-btn" type="button" id="label-filter-btn" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="label-filter-text" id="label-filter-text" data-i18n="common_loading">Loading...</span>
+            </button>
+            <ul class="dropdown-menu label-filter-menu" id="label-filter-menu" aria-labelledby="label-filter-btn">
+              <li><span class="dropdown-item-text" data-i18n="common_loading">Loading...</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="popup-header-actions">
+          <div class="loading loading-header" id="loading" hidden>
+            <div class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></div>
+            <span class="loading-text" id="loading-text" data-i18n="popup_loading_indicator">Loading…</span>
+          </div>
+          <button
+            class="btn btn-outline-primary btn-icon"
+            id="refresh-button"
+            aria-label="Refresh"
+            title="Refresh"
+            data-i18n-attrs="aria-label:common_refresh,title:popup_refresh_title"
+          >
+            <svg width="16" height="16" fill="currentColor" aria-hidden="true">
+              <use href="../assets/icons/refresh.svg#icon"/>
+            </svg>
+            <span class="visually-hidden" data-i18n="common_refresh">Refresh</span>
+          </button>
+          <button class="btn btn-sm btn-primary" id="open-app" data-i18n="popup_open_app">Dashboard</button>
+        </div>
+      </header>
+      <section class="popup-content" aria-live="polite">
+        <div class="popup-message" id="message"></div>
+        <div class="popup-signin" id="signin-container" hidden>
+          <p class="popup-signin-text" data-i18n="popup_signin_message">
+            Sign in to Twitch to manage your starred streamers and get live notifications.
+          </p>
+          <button class="btn btn-primary" id="signin-button">
+            <span class="signin-button-text" data-i18n="popup_signin_button">Sign in with Twitch</span>
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+          </button>
+        </div>
+        <ul class="starred-list list-unstyled" id="starred-list"></ul>
+      </section>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+    <script src="../assets/bootstrap/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

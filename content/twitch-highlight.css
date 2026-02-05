@@ -1,0 +1,151 @@
+/**
+ * Twitch.tv Content Script Styles - Starred Streamer Highlighting
+ *
+ * Theme-aware golden highlighting for starred streamers' avatars
+ */
+
+:root {
+  --ttagger-highlight-ring: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+  --ttagger-highlight-shadow: rgba(255, 215, 0, 0.7);
+  --ttagger-highlight-shadow-hover: rgba(255, 215, 0, 0.9);
+  --ttagger-highlight-ring-light: linear-gradient(135deg, #b8860b 0%, #daa520 50%, #b8860b 100%);
+  --ttagger-highlight-shadow-light: rgba(184, 134, 11, 1);
+  --ttagger-highlight-shadow-hover-light: rgba(184, 134, 11, 1);
+}
+
+/*
+ * Main highlighting effect for starred streamers
+ * Uses a golden ring with glow effect that works on both dark and light themes
+ */
+.ttagger-starred {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+.ttagger-starred::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: var(--ttagger-highlight-ring, linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%)) !important;
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--ttagger-highlight-shadow, rgba(255, 215, 0, 0.7)) !important;
+  z-index: 0;
+}
+
+/* Enhanced glow on hover for interactivity feedback */
+.ttagger-starred:hover::before {
+  box-shadow: 0 0 12px var(--ttagger-highlight-shadow-hover, rgba(255, 215, 0, 0.9)) !important;
+}
+
+/*
+ * Add golden box-shadow to the avatar image itself for extra emphasis
+ */
+.ttagger-starred .tw-image-avatar {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+  border-radius: 50% !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure the effect works with Twitch's existing avatar styles */
+.ttagger-starred .tw-avatar {
+  position: relative;
+}
+
+/*
+ * Theme-specific adjustments
+ * Light theme: Enhanced visibility with darker gold
+ * Dark theme: More vibrant glow
+ */
+
+/* Light theme detection using Twitch's theme class */
+.tw-root--theme-light .ttagger-starred::before {
+  box-shadow: 0 0 10px var(--ttagger-highlight-shadow-light, rgba(184, 134, 11, 1)) !important;
+  background: var(--ttagger-highlight-ring-light, linear-gradient(135deg, #b8860b 0%, #daa520 50%, #b8860b 100%)) !important;
+}
+
+.tw-root--theme-light .ttagger-starred:hover::before {
+  box-shadow: 0 0 14px var(--ttagger-highlight-shadow-hover-light, rgba(184, 134, 11, 1)) !important;
+}
+
+.tw-root--theme-light .ttagger-starred .tw-image-avatar {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+/*
+ * Accessibility: Reduce motion for users who prefer it
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ttagger-starred {
+    transition: none;
+  }
+}
+
+/*
+ * Sidebar tag badges for quick tag context
+ */
+.ttagger-sidebar-tag-badges {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ttagger-sidebar-tag-badge {
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 6px;
+  color: #f7f7f8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.ttagger-sidebar-tag-badge:hover {
+  filter: brightness(1.05);
+}
+
+.tw-root--theme-light .ttagger-sidebar-tag-badge {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1f1f23;
+  border-color: rgba(0, 0, 0, 0.14);
+  box-shadow: 0 1px 2px rgba(31, 31, 35, 0.12);
+}
+
+.tw-root--theme-light .ttagger-sidebar-tag-badge:hover {
+  filter: brightness(1.05);
+}
+
+/*
+ * Optional: Pulse animation for extra attention
+ * Uncomment if you want a subtle pulsing effect
+ */
+/*
+@keyframes ttagger-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+  }
+}
+
+.ttagger-starred {
+  animation: ttagger-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ttagger-starred {
+    animation: none;
+  }
+}
+*/

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="options_title">TTagger Settings</title>
+    <link rel="stylesheet" href="../assets/bootstrap/bootstrap.min.css" />
+  </head>
+  <body class="bg-body text-body">
+    <div class="container py-4">
+      <h1 class="h4 mb-3" data-i18n="options_heading">Settings</h1>
+
+      <div id="status" class="alert d-none" role="alert"></div>
+
+      <section class="mb-4">
+        <h2 class="h5" data-i18n="options_section_data_portability">Data Portability</h2>
+        <p class="form-text" data-i18n="options_data_portability_help">Exported files let you migrate tags and cached data between browsers.</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-primary" id="export-button" data-i18n="options_export_button">Export Data</button>
+          <label class="btn btn-secondary mb-0">
+            <span data-i18n="options_import_button">Import Data</span>
+            <input type="file" id="import-input" accept="application/json" hidden />
+          </label>
+          <button class="btn btn-outline-danger" id="reset-button" data-i18n="options_reset_button">Reset Tags &amp; Favorites</button>
+        </div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h5" data-i18n="options_section_notifications">Notifications</h2>
+        <p class="form-text" data-i18n="options_notifications_help">Get notified when starred streamers go live. Requires authentication.</p>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="notifications-toggle" />
+          <label class="form-check-label" for="notifications-toggle" data-i18n="options_notifications_toggle">
+            Enable live notifications
+          </label>
+        </div>
+        <div class="row g-2 align-items-center mt-3">
+          <div class="col-auto">
+            <label class="form-label mb-0" for="notification-cutoff" data-i18n="options_notifications_cutoff_label">
+              Only notify for streams started within
+            </label>
+          </div>
+          <div class="col-auto">
+            <div class="input-group">
+              <input
+                class="form-control"
+                type="number"
+                id="notification-cutoff"
+                min="5"
+                max="720"
+                step="5"
+              />
+              <span class="input-group-text" data-i18n="options_notifications_cutoff_suffix">minutes</span>
+            </div>
+          </div>
+          <div class="col-12">
+            <small class="form-text" data-i18n="options_notifications_cutoff_help">
+              Streams older than this window will not trigger alerts when background checks resume.
+            </small>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h5" data-i18n="options_section_language">Language</h2>
+        <p class="form-text" data-i18n="options_language_help">Override the extension language. Defaults to your browser language.</p>
+        <div class="col-md-4">
+          <label class="form-label" for="language-select" data-i18n="options_language_select_label">Language override</label>
+          <select class="form-select" id="language-select">
+            <option value="system" data-i18n="options_language_option_system">Use browser language</option>
+            <option value="en" data-i18n="options_language_option_en">English</option>
+            <option value="de" data-i18n="options_language_option_de">Deutsch</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h5" data-i18n="options_section_stream_opening">Stream Opening</h2>
+        <p class="form-text" data-i18n="options_stream_opening_help">
+          Control how streams open when clicking streamers in the popup. Hold Shift to toggle behavior.
+        </p>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="openInCurrentTab" id="open-tab-never" value="never" />
+          <label class="form-check-label" for="open-tab-never" data-i18n="options_stream_opening_new_tab">
+            New tab
+          </label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="openInCurrentTab" id="open-tab-always" value="always" />
+          <label class="form-check-label" for="open-tab-always" data-i18n="options_stream_opening_current_tab">
+            Current tab
+          </label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="openInCurrentTab" id="open-tab-smart" value="smart" />
+          <label class="form-check-label" for="open-tab-smart" data-i18n="options_stream_opening_smart">
+            Smart (only if blank or on Twitch)
+          </label>
+        </div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h5" data-i18n="options_section_twitch_integration">Twitch Integration</h2>
+        <p class="form-text" data-i18n="options_twitch_integration_help">
+          Highlight starred streamers on Twitch.tv with a customizable ring and compact tag badges.
+        </p>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="twitch-highlighting-toggle" />
+          <label class="form-check-label" for="twitch-highlighting-toggle" data-i18n="options_twitch_integration_toggle">
+            Highlight starred streamers on Twitch.tv
+          </label>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="twitch-sidebar-tags-toggle" />
+          <label class="form-check-label" for="twitch-sidebar-tags-toggle" data-i18n="options_twitch_sidebar_tags_toggle">
+            Show tag badges next to streamers
+          </label>
+        </div>
+        <div class="mt-3">
+          <label class="form-label" for="twitch-highlight-color" data-i18n="options_twitch_highlight_color_label">
+            Highlight color
+          </label>
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <input
+              class="form-control form-control-color"
+              type="color"
+              id="twitch-highlight-color"
+              name="twitch-highlight-color"
+              value="#ffd700"
+              title="Choose highlight color"
+            />
+            <input
+              class="form-control"
+              type="text"
+              id="twitch-highlight-color-hex"
+              name="twitch-highlight-color-hex"
+              maxlength="7"
+              placeholder="#ffd700"
+              aria-describedby="twitch-highlight-color-help"
+              style="width: 7rem;"
+            />
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              type="button"
+              id="twitch-highlight-color-reset"
+              data-i18n="options_twitch_highlight_color_reset"
+            >
+              Reset
+            </button>
+          </div>
+          <div class="form-text" id="twitch-highlight-color-help" data-i18n="options_twitch_highlight_color_help">
+            Pick the color used for the ring and glow around starred streamers.
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h5" data-i18n="options_section_authentication">Authentication</h2>
+        <p class="form-text" data-i18n="options_authentication_help">Disconnecting clears tokens and cached data.</p>
+        <button class="btn btn-outline-danger" id="signout-button" data-i18n="options_disconnect_button">Disconnect Twitch</button>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h5" data-i18n="options_section_diagnostics">Diagnostics</h2>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="debug-logging-toggle" />
+          <label class="form-check-label" for="debug-logging-toggle" data-i18n="options_debug_logging_toggle">
+            Enable debug logging in Twitch integrations
+          </label>
+        </div>
+        <p class="form-text mb-3" data-i18n="options_debug_logging_help">
+          When enabled, content scripts log additional details to the browser console for troubleshooting.
+        </p>
+        <button class="btn btn-outline-secondary" id="status-button" data-i18n="options_status_button">Check Status</button>
+      </section>
+
+      <section>
+        <h2 class="h5" data-i18n="options_section_update_log">Update Log (Last 300 entries)</h2>
+        <div class="mb-3">
+          <div class="d-flex gap-2 flex-wrap mb-2">
+            <button class="btn btn-sm btn-outline-primary" id="refresh-log" data-i18n="options_update_log_refresh">Refresh</button>
+            <button class="btn btn-sm btn-outline-danger" id="clear-log" data-i18n="options_update_log_clear">Clear Log</button>
+            <button class="btn btn-sm btn-outline-secondary" id="export-log" data-i18n="options_update_log_export">Export Log</button>
+          </div>
+          <small class="text-muted" data-i18n="options_update_log_help">Shows when live streamer updates ran and what triggered them.</small>
+        </div>
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-striped">
+            <thead class="sticky-top bg-body">
+              <tr>
+                <th data-i18n="options_table_header_time">Time</th>
+                <th data-i18n="options_table_header_trigger">Trigger</th>
+                <th data-i18n="options_table_header_live">Live</th>
+                <th data-i18n="options_table_header_starred">Starred</th>
+                <th data-i18n="options_table_header_cache_age">Cache Age</th>
+                <th data-i18n="options_table_header_duration">Duration</th>
+                <th data-i18n="options_table_header_status">Status</th>
+              </tr>
+            </thead>
+            <tbody id="log-entries">
+              <tr>
+                <td colspan="7" class="text-center text-muted" data-i18n="options_update_log_loading">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="options.js"></script>
+    <script src="../assets/bootstrap/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

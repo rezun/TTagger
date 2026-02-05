@@ -1,0 +1,1067 @@
+{
+  "extension_name": {
+    "message": "TTagger",
+    "description": "Extension name displayed in browser UIs."
+  },
+  "extension_short_name": {
+    "message": "TTagger",
+    "description": "Short name for extension surfaces with limited space."
+  },
+  "extension_description": {
+    "message": "TTagger hilft dir, deine gefolgten Twitch-Streamer mit persönlichen Tags und schnellen Filtern zu organisieren.",
+    "description": "Extension description shown in the web store and extension manager."
+  },
+  "app_title": {
+    "message": "TTagger",
+    "description": "Dashboard page title and header text."
+  },
+  "app_icon_alt": {
+    "message": "TTagger-Symbol",
+    "description": "Alt text for the extension icon displayed in the dashboard and popup headers."
+  },
+  "app_theme_label": {
+    "message": "Design",
+    "description": "Label for the theme preference controls."
+  },
+  "app_theme_group_label": {
+    "message": "Design-Einstellung",
+    "description": "Aria-label for the theme toggle button group."
+  },
+  "app_theme_tooltip_system": {
+    "message": "Dem Systemdesign folgen",
+    "description": "Tooltip for the system theme button."
+  },
+  "app_theme_tooltip_dark": {
+    "message": "Dunkles Design",
+    "description": "Tooltip for the dark theme button."
+  },
+  "app_theme_tooltip_light": {
+    "message": "Helles Design",
+    "description": "Tooltip for the light theme button."
+  },
+  "app_theme_option_system": {
+    "message": "System",
+    "description": "Accessible label for the system theme option."
+  },
+  "app_theme_option_dark": {
+    "message": "Dunkel",
+    "description": "Accessible label for the dark theme option."
+  },
+  "app_theme_option_light": {
+    "message": "Hell",
+    "description": "Accessible label for the light theme option."
+  },
+  "common_settings": {
+    "message": "Einstellungen",
+    "description": "Label for buttons or links that open settings."
+  },
+  "common_close": {
+    "message": "Schließen",
+    "description": "Generic close label used for modal dismiss buttons."
+  },
+  "common_cancel": {
+    "message": "Abbrechen",
+    "description": "Generic cancel button label."
+  },
+  "common_ok": {
+    "message": "OK",
+    "description": "Generic confirmation button label."
+  },
+  "app_connect_button": {
+    "message": "Mit Twitch verbinden",
+    "description": "Primary button text prompting the user to connect their Twitch account."
+  },
+  "app_filter_streamer_label": {
+    "message": "Streamer filtern",
+    "description": "Label for the streamer name filter input."
+  },
+  "app_filter_streamer_placeholder": {
+    "message": "Name des Streamers",
+    "description": "Placeholder text inside the streamer name filter input."
+  },
+  "app_filter_streamer_clear": {
+    "message": "Streamerfilter löschen",
+    "description": "Aria label for clearing the streamer name filter."
+  },
+  "app_filter_content_label": {
+    "message": "Inhalt filtern",
+    "description": "Label for the content filter input."
+  },
+  "app_filter_content_placeholder": {
+    "message": "Titel oder Kategorie",
+    "description": "Placeholder text inside the content filter input."
+  },
+  "app_filter_content_clear": {
+    "message": "Inhaltsfilter löschen",
+    "description": "Aria label for clearing the content filter."
+  },
+  "app_sort_label": {
+    "message": "Streamer sortieren",
+    "description": "Accessible label for the sort select control."
+  },
+  "app_sort_option_newest": {
+    "message": "Neueste Follows",
+    "description": "Option text for sorting by newest follows."
+  },
+  "app_sort_option_oldest": {
+    "message": "Älteste Follows",
+    "description": "Option text for sorting by oldest follows."
+  },
+  "app_sort_option_name_ascending": {
+    "message": "Name A → Z",
+    "description": "Option text for sorting by streamer name ascending."
+  },
+  "app_sort_option_name_descending": {
+    "message": "Name Z → A",
+    "description": "Option text for sorting by streamer name descending."
+  },
+  "app_live_toggle": {
+    "message": "Live zuerst",
+    "description": "Label for the toggle that prioritizes live streamers."
+  },
+  "app_starred_toggle": {
+    "message": "Favoriten zuerst",
+    "description": "Label for the toggle that prioritizes starred streamers."
+  },
+  "app_tag_toggle": {
+    "message": "Tags",
+    "description": "Label for the button that toggles the tag panel on mobile."
+  },
+  "app_tag_section_heading": {
+    "message": "Tags",
+    "description": "Heading label for the tag sidebar."
+  },
+  "app_reorder_tags_button": {
+    "message": "Sortieren",
+    "description": "Button text used to enable tag reorder mode."
+  },
+  "app_reorder_tags_aria": {
+    "message": "Tag-Sortiermodus aktivieren",
+    "description": "Accessible label for the tag reorder mode toggle."
+  },
+  "app_reorder_tags_finish": {
+    "message": "Tag-Sortiermodus beenden",
+    "description": "Accessible label when tag sort mode is active."
+  },
+  "app_add_tag_button": {
+    "message": "Tag hinzufügen",
+    "description": "Button text used to add a new tag."
+  },
+  "app_hide_tags": {
+    "message": "Tags ausblenden",
+    "description": "Aria label for the button that closes the tag sidebar."
+  },
+  "app_tag_list_label": {
+    "message": "Tag-Liste",
+    "description": "Accessible label for the tag sidebar list element."
+  },
+  "common_done": {
+    "message": "Fertig",
+    "description": "Generic confirmation button label."
+  },
+  "app_streamer_count_initial": {
+    "message": "0 Streamer",
+    "description": "Initial text shown before follows are loaded."
+  },
+  "app_streamer_count_single": {
+    "message": "1 Streamer",
+    "description": "Streamer count label shown when exactly one streamer is listed."
+  },
+  "app_streamer_count_multiple": {
+    "message": "$COUNT$ Streamer",
+    "description": "Streamer count label shown when multiple streamers are listed.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_refresh_tooltip": {
+    "message": "Follows aktualisieren",
+    "description": "Tooltip for the dashboard refresh button."
+  },
+  "common_refresh": {
+    "message": "Aktualisieren",
+    "description": "Generic refresh button label."
+  },
+  "app_signed_out_message": {
+    "message": "Melde dich an, um deine gefolgten Streamer zu laden.",
+    "description": "Message shown in the dashboard when the user is signed out."
+  },
+  "popup_open_settings": {
+    "message": "Einstellungen öffnen",
+    "description": "Aria label for the popup button that opens settings."
+  },
+  "popup_default_tag_name": {
+    "message": "Streamer",
+    "description": "Fallback tag name used in popup messages when no tag is selected."
+  },
+  "popup_toggle_notifications": {
+    "message": "Benachrichtigungen umschalten",
+    "description": "Aria label for the popup notifications toggle."
+  },
+  "popup_notifications_label": {
+    "message": "Benachrichtigungen",
+    "description": "Visually hidden label for the notifications toggle in the popup."
+  },
+  "popup_reset_to_starred": {
+    "message": "Auf Favoriten zurücksetzen",
+    "description": "Tooltip and aria label for the popup reset button."
+  },
+  "common_loading": {
+    "message": "Wird geladen...",
+    "description": "Generic loading placeholder text."
+  },
+  "popup_loading_indicator": {
+    "message": "Laden…",
+    "description": "Loading text displayed next to the popup spinner."
+  },
+  "popup_open_app": {
+    "message": "Dashboard",
+    "description": "Button text used to open the full dashboard from the popup."
+  },
+  "popup_no_live_streamers": {
+    "message": "Keine $TAG$-Streamer sind gerade live.",
+    "description": "Message shown when no streamers are live for the selected tag.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
+  "popup_signin_message": {
+    "message": "Melde dich bei Twitch an, um deine Favoriten zu verwalten und Live-Benachrichtigungen zu erhalten.",
+    "description": "Instructional text shown when the user needs to sign in from the popup."
+  },
+  "popup_signin_button": {
+    "message": "Mit Twitch anmelden",
+    "description": "Popup button text used to initiate Twitch sign-in."
+  },
+  "common_signin_loading": {
+    "message": "Laden",
+    "description": "Accessible loading text displayed in various contexts."
+  },
+  "popup_no_title": {
+    "message": "Kein Titel verfügbar",
+    "description": "Fallback stream title shown when none is provided."
+  },
+  "popup_error_unable_dashboard": {
+    "message": "Streamer konnten nicht geladen werden. Öffne das Dashboard für die vollständige Ansicht.",
+    "description": "Error shown when popup data cannot be loaded."
+  },
+  "popup_error_open_dashboard": {
+    "message": "Das Dashboard konnte nicht automatisch geöffnet werden. Bitte öffne es über chrome://extensions.",
+    "description": "Message shown when the dashboard cannot be opened automatically."
+  },
+  "popup_error_open_settings": {
+    "message": "Die Einstellungen konnten nicht automatisch geöffnet werden. Verwende stattdessen die Erweiterungsseite.",
+    "description": "Message shown when the settings page cannot be opened automatically."
+  },
+  "popup_error_refresh": {
+    "message": "Aktualisieren fehlgeschlagen.",
+    "description": "Error shown when refreshing popup data fails."
+  },
+  "popup_error_toggle_notifications": {
+    "message": "Benachrichtigungen konnten nicht umgeschaltet werden.",
+    "description": "Error shown when toggling notifications fails."
+  },
+  "popup_error_signin": {
+    "message": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+    "description": "Error shown when sign-in fails."
+  },
+  "popup_error_signin_short": {
+    "message": "Anmeldung fehlgeschlagen.",
+    "description": "Short error used in thrown errors when sign-in fails."
+  },
+  "popup_error_load_data": {
+    "message": "Daten konnten nicht geladen werden.",
+    "description": "Generic error used when popup data cannot be loaded."
+  },
+  "options_title": {
+    "message": "TTagger-Einstellungen",
+    "description": "Document title for the options page."
+  },
+  "options_heading": {
+    "message": "Einstellungen",
+    "description": "Main heading text on the options page."
+  },
+  "options_section_data_portability": {
+    "message": "Datenportabilität",
+    "description": "Heading for the data portability section."
+  },
+  "options_section_notifications": {
+    "message": "Benachrichtigungen",
+    "description": "Heading for the notifications section."
+  },
+  "options_section_language": {
+    "message": "Sprache",
+    "description": "Heading for the language override section."
+  },
+  "options_section_stream_opening": {
+    "message": "Stream-Öffnung",
+    "description": "Heading for the stream opening preferences section."
+  },
+  "options_section_twitch_integration": {
+    "message": "Twitch-Integration",
+    "description": "Heading for the Twitch integration section."
+  },
+  "options_section_authentication": {
+    "message": "Authentifizierung",
+    "description": "Heading for the authentication section."
+  },
+  "options_section_diagnostics": {
+    "message": "Diagnose",
+    "description": "Heading for the diagnostics section."
+  },
+  "options_section_update_log": {
+    "message": "Update-Log (letzte 300 Einträge)",
+    "description": "Heading for the update log section."
+  },
+  "options_data_portability_help": {
+    "message": "Exportierte Dateien helfen dir, Tags und zwischengespeicherte Daten zwischen Browsern zu übertragen.",
+    "description": "Helper text explaining the data portability actions."
+  },
+  "options_export_button": {
+    "message": "Daten exportieren",
+    "description": "Button text for exporting user data."
+  },
+  "options_import_button": {
+    "message": "Daten importieren",
+    "description": "Button text for importing user data."
+  },
+  "options_reset_button": {
+    "message": "Tags & Favoriten zurücksetzen",
+    "description": "Button text for resetting tags and favorites."
+  },
+  "options_notifications_help": {
+    "message": "Erhalte Benachrichtigungen, wenn Favoriten live gehen. Eine Anmeldung ist erforderlich.",
+    "description": "Helper text explaining notification settings."
+  },
+  "options_notifications_toggle": {
+    "message": "Live-Benachrichtigungen aktivieren",
+    "description": "Label for the live notifications toggle."
+  },
+  "options_notifications_cutoff_label": {
+    "message": "Nur benachrichtigen, wenn der Stream gestartet wurde innerhalb von",
+    "description": "Label for the notification cutoff input."
+  },
+  "options_notifications_cutoff_suffix": {
+    "message": "Minuten",
+    "description": "Suffix shown next to the notification cutoff input."
+  },
+  "options_notifications_cutoff_help": {
+    "message": "Ältere Streams lösen keine Benachrichtigungen aus, wenn die Aktualisierungen wieder anlaufen.",
+    "description": "Helper text explaining the notification cutoff setting."
+  },
+  "options_notifications_cutoff_success": {
+    "message": "Benachrichtigungszeitraum auf $MINUTES$ Minuten aktualisiert.",
+    "description": "Success message shown when the notification cutoff value is updated.",
+    "placeholders": {
+      "minutes": {
+        "content": "$1"
+      }
+    }
+  },
+  "options_notifications_cutoff_error": {
+    "message": "Benachrichtigungszeitraum konnte nicht aktualisiert werden.",
+    "description": "Error message shown when updating the notification cutoff fails."
+  },
+  "options_language_help": {
+    "message": "Lege fest, welche Sprache die Erweiterung nutzt. Standard ist die Browsersprache.",
+    "description": "Helper text explaining the language override setting."
+  },
+  "options_language_select_label": {
+    "message": "Sprachüberschreibung",
+    "description": "Label for the language override select element."
+  },
+  "options_language_option_system": {
+    "message": "Browsersprache verwenden",
+    "description": "Select option for following the browser language."
+  },
+  "options_language_option_en": {
+    "message": "Englisch",
+    "description": "Select option for English language override."
+  },
+  "options_language_option_de": {
+    "message": "Deutsch",
+    "description": "Select option for German language override."
+  },
+  "options_stream_opening_help": {
+    "message": "Steuere, wie Streams geöffnet werden, wenn du im Popup klickst. Halte Umschalt gedrückt, um das Verhalten zu wechseln.",
+    "description": "Helper text explaining stream opening settings."
+  },
+  "options_stream_opening_new_tab": {
+    "message": "Neuer Tab",
+    "description": "Radio button label for opening streams in a new tab."
+  },
+  "options_stream_opening_current_tab": {
+    "message": "Aktueller Tab",
+    "description": "Radio button label for opening streams in the current tab."
+  },
+  "options_stream_opening_smart": {
+    "message": "Smart (nur wenn leer oder auf Twitch)",
+    "description": "Radio button label for smart stream opening behavior."
+  },
+  "options_twitch_integration_help": {
+    "message": "Markiere Favoriten auf Twitch.tv mit einem anpassbaren Ring und kompakten Tag-Badges.",
+    "description": "Helper text explaining Twitch integration."
+  },
+  "options_twitch_integration_toggle": {
+    "message": "Favoriten auf Twitch.tv hervorheben",
+    "description": "Label for the Twitch highlighting toggle."
+  },
+  "options_twitch_sidebar_tags_toggle": {
+    "message": "Tag-Badges neben Streamern anzeigen",
+    "description": "Label for the Twitch sidebar tag badges toggle."
+  },
+  "options_twitch_highlight_color_label": {
+    "message": "Highlight-Farbe",
+    "description": "Label for the Twitch highlight color picker."
+  },
+  "options_twitch_highlight_color_help": {
+    "message": "Wähle die Farbe für Rahmen und Glanz deiner favorisierten Streamer.",
+    "description": "Helper text for the Twitch highlight color picker."
+  },
+  "options_twitch_highlight_color_reset": {
+    "message": "Zurücksetzen",
+    "description": "Button label to reset the Twitch highlight color to default."
+  },
+  "options_highlight_color_success": {
+    "message": "Highlight-Farbe für Twitch aktualisiert.",
+    "description": "Success message when the Twitch highlight color preference is saved."
+  },
+  "options_highlight_color_error": {
+    "message": "Highlight-Farbe konnte nicht aktualisiert werden.",
+    "description": "Error message when the Twitch highlight color preference fails to save."
+  },
+  "options_highlight_color_invalid": {
+    "message": "Bitte gib einen gültigen Hex-Farbwert ein, z. B. #ffd700.",
+    "description": "Validation message when the Twitch highlight color input is invalid."
+  },
+  "options_highlight_color_reset_success": {
+    "message": "Highlight-Farbe auf das goldene Standard-Highlight zurückgesetzt.",
+    "description": "Success message when the Twitch highlight color is reset."
+  },
+  "options_sidebar_tags_enabled": {
+    "message": "Tag-Badges in der Seitenleiste aktiviert.",
+    "description": "Success message for enabling Twitch sidebar tag badges."
+  },
+  "options_sidebar_tags_disabled": {
+    "message": "Tag-Badges in der Seitenleiste deaktiviert.",
+    "description": "Success message for disabling Twitch sidebar tag badges."
+  },
+  "options_sidebar_tags_error": {
+    "message": "Einstellung für Tag-Badges in der Seitenleiste konnte nicht gespeichert werden.",
+    "description": "Error message shown when the Twitch sidebar tag badge preference fails to save."
+  },
+  "options_authentication_help": {
+    "message": "Das Trennen löscht Tokens und Zwischenspeicher.",
+    "description": "Helper text explaining the disconnect action."
+  },
+  "options_disconnect_button": {
+    "message": "Twitch trennen",
+    "description": "Button text for disconnecting the Twitch account."
+  },
+  "options_status_button": {
+    "message": "Status prüfen",
+    "description": "Button text for checking diagnostics status."
+  },
+  "options_debug_logging_toggle": {
+    "message": "Debug-Protokollierung für Twitch-Integrationen aktivieren",
+    "description": "Label for the debug logging toggle in settings."
+  },
+  "options_debug_logging_help": {
+    "message": "Wenn aktiviert, protokollieren Inhaltsskripte zusätzliche Details in der Browser-Konsole zur Fehlersuche.",
+    "description": "Helper text explaining the debug logging toggle."
+  },
+  "options_debug_logging_enabled": {
+    "message": "Debug-Protokollierung aktiviert. Öffne die Browser-Konsole, um Meldungen anzuzeigen.",
+    "description": "Success message shown when debug logging is enabled."
+  },
+  "options_debug_logging_disabled": {
+    "message": "Debug-Protokollierung deaktiviert.",
+    "description": "Success message shown when debug logging is disabled."
+  },
+  "options_debug_logging_error": {
+    "message": "Debug-Protokollierung konnte nicht aktualisiert werden.",
+    "description": "Error message shown when updating debug logging preference fails."
+  },
+  "options_update_log_refresh": {
+    "message": "Aktualisieren",
+    "description": "Button text for refreshing the update log."
+  },
+  "options_update_log_clear": {
+    "message": "Log löschen",
+    "description": "Button text for clearing the update log."
+  },
+  "options_update_log_export": {
+    "message": "Log exportieren",
+    "description": "Button text for exporting the update log."
+  },
+  "options_update_log_help": {
+    "message": "Zeigt, wann Live-Updates ausgeführt wurden und wodurch sie ausgelöst wurden.",
+    "description": "Helper text explaining the update log."
+  },
+  "options_table_header_time": {
+    "message": "Zeit",
+    "description": "Update log table column heading."
+  },
+  "options_table_header_trigger": {
+    "message": "Auslöser",
+    "description": "Update log table column heading."
+  },
+  "options_table_header_live": {
+    "message": "Live",
+    "description": "Update log table column heading."
+  },
+  "options_table_header_starred": {
+    "message": "Favoriten",
+    "description": "Update log table column heading."
+  },
+  "options_table_header_cache_age": {
+    "message": "Cache-Alter",
+    "description": "Update log table column heading."
+  },
+  "options_table_header_duration": {
+    "message": "Dauer",
+    "description": "Update log table column heading."
+  },
+  "options_table_header_status": {
+    "message": "Status",
+    "description": "Update log table column heading."
+  },
+  "options_update_log_loading": {
+    "message": "Wird geladen...",
+    "description": "Placeholder text in the update log table while entries load."
+  },
+  "options_export_success": {
+    "message": "Export erstellt. Der Download sollte automatisch starten.",
+    "description": "Success message shown after exporting data."
+  },
+  "options_export_error": {
+    "message": "Daten konnten nicht exportiert werden.",
+    "description": "Error message shown when exporting data fails."
+  },
+  "options_import_replace_prompt": {
+    "message": "Beim Import werden deine vorhandenen Tags und Zuordnungen ersetzt. Fortfahren?",
+    "description": "Confirmation prompt shown before replacing data during import."
+  },
+  "options_import_replace_success": {
+    "message": "Import erfolgreich ersetzt.",
+    "description": "Success message when imported data replaces existing data."
+  },
+  "options_import_error": {
+    "message": "Import fehlgeschlagen. Stelle sicher, dass die Datei ein gültiger Export ist.",
+    "description": "Error message shown when importing data fails."
+  },
+  "options_signout_prompt": {
+    "message": "Twitch trennen und zwischengespeicherte Daten löschen?",
+    "description": "Confirmation prompt shown before signing out."
+  },
+  "options_signout_success": {
+    "message": "Von Twitch getrennt.",
+    "description": "Success message when Twitch is disconnected."
+  },
+  "options_signout_error": {
+    "message": "Trennen fehlgeschlagen.",
+    "description": "Error message shown when sign-out fails."
+  },
+  "options_status_signed_in": {
+    "message": "Angemeldet als $DISPLAY$ (@$LOGIN$).",
+    "description": "Status message when the user is signed in.",
+    "placeholders": {
+      "display": {
+        "content": "$1"
+      },
+      "login": {
+        "content": "$2"
+      }
+    }
+  },
+  "options_status_signed_out": {
+    "message": "Nicht angemeldet.",
+    "description": "Status message when the user is not signed in."
+  },
+  "options_status_error": {
+    "message": "Statusprüfung fehlgeschlagen.",
+    "description": "Error message shown when checking status fails."
+  },
+  "options_notifications_require_auth": {
+    "message": "Benachrichtigungen erfordern eine Anmeldung",
+    "description": "Tooltip shown when notifications cannot be toggled without signing in."
+  },
+  "options_reset_require_auth": {
+    "message": "Zurücksetzen erfordert eine Anmeldung",
+    "description": "Tooltip shown when reset is disabled because the user is signed out."
+  },
+  "options_notifications_enabled": {
+    "message": "Live-Benachrichtigungen aktiviert.",
+    "description": "Success message when notifications are turned on."
+  },
+  "options_notifications_disabled": {
+    "message": "Live-Benachrichtigungen deaktiviert.",
+    "description": "Success message when notifications are turned off."
+  },
+  "options_notifications_update_error": {
+    "message": "Benachrichtigungseinstellung konnte nicht aktualisiert werden.",
+    "description": "Error message when notification settings cannot be updated."
+  },
+  "options_language_update_success": {
+    "message": "Sprache aktualisiert. Lade andere Erweiterungsseiten neu, um die Änderung zu sehen.",
+    "description": "Success message shown after changing the language override."
+  },
+  "options_language_update_error": {
+    "message": "Spracheinstellung konnte nicht aktualisiert werden.",
+    "description": "Error message shown when updating the language override fails."
+  },
+  "options_open_never": {
+    "message": "Streams werden in neuen Tabs geöffnet.",
+    "description": "Status message when open-in-current-tab preference is set to never."
+  },
+  "options_open_always": {
+    "message": "Streams werden im aktuellen Tab geöffnet.",
+    "description": "Status message when open-in-current-tab preference is set to always."
+  },
+  "options_open_smart": {
+    "message": "Streams werden smart geöffnet (aktueller Tab nur wenn leer oder auf Twitch).",
+    "description": "Status message when smart open-in-current-tab preference is selected."
+  },
+  "options_open_toggle_hint": {
+    "message": "Halte Umschalt zum Umschalten.",
+    "description": "Additional hint appended to stream opening status messages."
+  },
+  "options_open_error": {
+    "message": "Stream-Öffnungseinstellung konnte nicht aktualisiert werden.",
+    "description": "Error message when updating stream opening preferences fails."
+  },
+  "options_highlighting_enabled": {
+    "message": "Twitch-Hervorhebung aktiviert. Lade Twitch.tv neu, um die Änderungen zu sehen.",
+    "description": "Success message when Twitch highlighting is enabled."
+  },
+  "options_highlighting_disabled": {
+    "message": "Twitch-Hervorhebung deaktiviert. Lade Twitch.tv neu, um die Änderungen zu sehen.",
+    "description": "Success message when Twitch highlighting is disabled."
+  },
+  "options_highlighting_error": {
+    "message": "Twitch-Hervorhebung konnte nicht aktualisiert werden.",
+    "description": "Error message when updating highlighting preference fails."
+  },
+  "options_reset_confirm_primary": {
+    "message": "Alle Tags und Favoriten zurücksetzen? Dadurch werden alle Tags und die Favoritenliste gelöscht.",
+    "description": "First confirmation prompt shown before resetting data."
+  },
+  "options_reset_confirm_secondary": {
+    "message": "Bist du dir wirklich sicher? Dieser Vorgang kann nicht rückgängig gemacht werden.",
+    "description": "Second confirmation prompt shown before resetting data."
+  },
+  "options_resetting_label": {
+    "message": "Wird zurückgesetzt...",
+    "description": "Temporary button label shown while data reset is in progress."
+  },
+  "options_reset_success": {
+    "message": "Tags und Favoriten wurden zurückgesetzt. Lade das Dashboard neu, um die Änderungen zu sehen.",
+    "description": "Success message shown after data reset."
+  },
+  "options_reset_error": {
+    "message": "Daten konnten nicht zurückgesetzt werden.",
+    "description": "Error message shown when resetting data fails."
+  },
+  "options_log_empty": {
+    "message": "Noch keine Log-Einträge.",
+    "description": "Message shown when the update log has no entries."
+  },
+  "options_log_status_skipped": {
+    "message": "Übersprungen",
+    "description": "Badge label for skipped log entries."
+  },
+  "options_log_status_success": {
+    "message": "Erfolg",
+    "description": "Badge label for successful log entries."
+  },
+  "options_log_status_failed": {
+    "message": "Fehlgeschlagen",
+    "description": "Badge label for failed log entries."
+  },
+  "options_log_unknown_error": {
+    "message": "Unbekannter Fehler",
+    "description": "Fallback error text when a log entry has no error message."
+  },
+  "options_log_skip_no_auth": {
+    "message": "Keine Authentifizierung",
+    "description": "Skip reason indicating missing authentication."
+  },
+  "options_log_skip_no_cache": {
+    "message": "Kein Cache",
+    "description": "Skip reason indicating missing cache data."
+  },
+  "options_log_skipped_title": {
+    "message": "Übersprungen: $REASON$",
+    "description": "Tooltip text for skipped log entries.",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "options_log_failed_title": {
+    "message": "$ERROR$",
+    "description": "Tooltip text for failed log entries displaying the error message.",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "options_log_load_error": {
+    "message": "Log konnte nicht geladen werden.",
+    "description": "Message shown when the update log cannot be loaded."
+  },
+  "options_log_trigger_alarm": {
+    "message": "Alarm",
+    "description": "Badge label for log entries triggered by alarms."
+  },
+  "options_log_trigger_manual": {
+    "message": "Manuell",
+    "description": "Badge label for manually triggered log entries."
+  },
+  "options_log_trigger_fallback": {
+    "message": "Fallback",
+    "description": "Badge label for fallback-triggered log entries."
+  },
+  "options_log_trigger_initialization": {
+    "message": "Init",
+    "description": "Badge label for initialization-triggered log entries."
+  },
+  "options_log_trigger_unknown": {
+    "message": "Unbekannt",
+    "description": "Badge label for log entries with an unknown trigger."
+  },
+  "options_log_clear_prompt": {
+    "message": "Alle Log-Einträge löschen? Dies kann nicht rückgängig gemacht werden.",
+    "description": "Confirmation prompt shown before clearing the update log."
+  },
+  "options_log_clear_success": {
+    "message": "Update-Log gelöscht.",
+    "description": "Success message shown after clearing the update log."
+  },
+  "options_log_clear_error": {
+    "message": "Log konnte nicht gelöscht werden.",
+    "description": "Error message shown when clearing the update log fails."
+  },
+  "options_log_export_success": {
+    "message": "Update-Log exportiert. Der Download sollte automatisch starten.",
+    "description": "Success message shown after exporting the update log."
+  },
+  "options_log_export_error": {
+    "message": "Update-Log konnte nicht exportiert werden.",
+    "description": "Error message shown when exporting the update log fails."
+  },
+  "app_working_status": {
+    "message": "Wird verarbeitet…",
+    "description": "Button text shown while a tag operation is in progress."
+  },
+  "popup_notifications_title": {
+    "message": "Benachrichtigungen umschalten",
+    "description": "Tooltip text for the notifications toggle button."
+  },
+  "popup_refresh_title": {
+    "message": "Aktualisieren",
+    "description": "Tooltip text for the refresh button in the popup."
+  },
+  "app_modal_new_tag_title": {
+    "message": "Neuer Tag",
+    "description": "Title for the create tag modal dialog."
+  },
+  "app_modal_rename_tag_title": {
+    "message": "Tag umbenennen",
+    "description": "Title for the rename tag modal dialog."
+  },
+  "app_modal_tag_name_placeholder": {
+    "message": "Tag-Name",
+    "description": "Placeholder text for tag name inputs."
+  },
+  "app_modal_color_picker_title_named": {
+    "message": "Farbe für \"$TAG$\" auswählen",
+    "description": "Title for the color picker modal with a specific tag name.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_modal_color_picker_title_generic": {
+    "message": "Tag-Farbe auswählen",
+    "description": "Title for the color picker modal without a specific tag name."
+  },
+  "app_modal_color_custom_label": {
+    "message": "Benutzerdefinierte Farbe",
+    "description": "Label for the custom color input in the color picker modal."
+  },
+  "app_modal_color_custom_hint": {
+    "message": "Verwende den Farbwähler oder wähle eine der Standardfarben.",
+    "description": "Helper text explaining how to pick colors in the modal."
+  },
+  "app_modal_color_default_label": {
+    "message": "Standardfarben",
+    "description": "Label for the default color swatches section."
+  },
+  "app_modal_color_default_aria": {
+    "message": "Standardfarben",
+    "description": "Accessible label for the default color swatch grid."
+  },
+  "app_modal_color_swatch_label": {
+    "message": "Farbe $COLOR$ verwenden",
+    "description": "Accessible label for an individual color swatch option.",
+    "placeholders": {
+      "color": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_modal_delete_tag_title": {
+    "message": "Tag löschen",
+    "description": "Title for the delete tag confirmation modal."
+  },
+  "app_modal_delete_tag_message": {
+    "message": "Möchtest du \"$TAG$\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "description": "Confirmation message when deleting a tag.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_modal_delete_tag_confirm": {
+    "message": "Löschen",
+    "description": "Confirmation button label for deleting a tag."
+  },
+  "app_error_rename_tag": {
+    "message": "Tag konnte nicht umbenannt werden.",
+    "description": "Error shown when a tag rename fails."
+  },
+  "app_error_update_tag_color": {
+    "message": "Tag-Farbe konnte nicht aktualisiert werden.",
+    "description": "Error shown when updating a tag color fails."
+  },
+  "app_error_delete_tag": {
+    "message": "Tag konnte nicht gelöscht werden.",
+    "description": "Error shown when deleting a tag fails."
+  },
+  "app_error_update_favorite": {
+    "message": "Favorit konnte nicht aktualisiert werden.",
+    "description": "Error shown when the starred state update fails."
+  },
+  "app_error_update_tag_assignment": {
+    "message": "Tag-Zuweisung konnte nicht aktualisiert werden.",
+    "description": "Error shown when a tag assignment toggle fails."
+  },
+  "app_error_reorder_tags": {
+    "message": "Tags konnten nicht neu sortiert werden.",
+    "description": "Error shown when tag reordering fails."
+  },
+  "app_error_login": {
+    "message": "Anmeldung fehlgeschlagen.",
+    "description": "Error message when Twitch login fails."
+  },
+  "app_error_open_settings": {
+    "message": "Einstellungen konnten nicht geöffnet werden.",
+    "description": "Error shown when the settings page cannot be opened."
+  },
+  "app_error_refresh_data": {
+    "message": "Daten konnten nicht aktualisiert werden.",
+    "description": "Error shown when refreshing follows fails."
+  },
+  "app_error_create_tag": {
+    "message": "Tag konnte nicht erstellt werden.",
+    "description": "Error shown when creating a tag fails."
+  },
+  "app_meta_viewers": {
+    "message": "$COUNT$ Zuschauer",
+    "description": "Label shown next to the viewer count in the dashboard.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_meta_viewer_single": {
+    "message": "$COUNT$ Zuschauer",
+    "description": "Label shown when exactly one viewer is watching.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_meta_live_prefix": {
+    "message": "Live seit ",
+    "description": "Prefix shown before the uptime in the dashboard."
+  },
+  "app_badge_live": {
+    "message": "LIVE",
+    "description": "Badge text shown for live streamers."
+  },
+  "app_meta_status_offline": {
+    "message": "Offline",
+    "description": "Label shown when a streamer is offline."
+  },
+  "app_meta_last_seen": {
+    "message": "Zuletzt gesehen $RELATIVE$",
+    "description": "Label describing when a streamer was last seen live.",
+    "placeholders": {
+      "relative": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_meta_followed_date": {
+    "message": "Gefolgt am $DATE$",
+    "description": "Label showing when the user followed a streamer.",
+    "placeholders": {
+      "date": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_meta_followed_unknown": {
+    "message": "Folgedatum unbekannt",
+    "description": "Label shown when the follow date cannot be determined."
+  },
+  "app_stream_preview_alt": {
+    "message": "$NAME$ Live-Vorschau",
+    "description": "Alt text for the streamer preview image in the dashboard.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_reorder_drag_handle_title": {
+    "message": "Zum Sortieren ziehen",
+    "description": "Tooltip for the tag list drag handle."
+  },
+  "app_loading_label": {
+    "message": "Wird geladen…",
+    "description": "Short label shown while data is loading."
+  },
+  "app_loading_streamers": {
+    "message": "Streamer werden geladen…",
+    "description": "Message shown while the streamer grid is loading."
+  },
+  "app_loading_tags": {
+    "message": "Tags werden geladen…",
+    "description": "Message shown while the tag list is loading."
+  },
+  "app_no_matching_streamers": {
+    "message": "Keine Streamer entsprechen deinen Filtern.",
+    "description": "Empty state message when no streamers satisfy the current filters."
+  },
+  "app_last_seen_just_now": {
+    "message": "gerade eben",
+    "description": "Relative time label for events that just happened."
+  },
+  "app_last_seen_minutes": {
+    "message": "vor $MINUTES$ Min.",
+    "description": "Relative time label for minutes ago.",
+    "placeholders": {
+      "minutes": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_last_seen_hours": {
+    "message": "vor $HOURS$ Std.",
+    "description": "Relative time label for hours ago.",
+    "placeholders": {
+      "hours": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_last_seen_days": {
+    "message": "vor $DAYS$ Tg.",
+    "description": "Relative time label for days ago.",
+    "placeholders": {
+      "days": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_meta_updated_just_now": {
+    "message": "Gerade aktualisiert",
+    "description": "Status text when the follow list was refreshed moments ago."
+  },
+  "content_no_tags_assigned": {
+    "message": "Keine Tags zugewiesen",
+    "description": "Message shown when a streamer has no tags assigned."
+  },
+  "content_no_tags_label": {
+    "message": "Deine Tags:",
+    "description": "Label preceding the tag badges on twitch.tv pages."
+  },
+  "content_no_tags_available": {
+    "message": "Keine Tags verfügbar",
+    "description": "Message shown when no tags are available on twitch.tv pages."
+  },
+  "content_no_custom_tags": {
+    "message": "Noch keine eigenen Tags. Lege Tags im Erweiterungspopup an.",
+    "description": "Message prompting users to create tags in the extension."
+  },
+  "content_manage_tags": {
+    "message": "Tags verwalten",
+    "description": "Tooltip and aria label for the manage tags button."
+  },
+  "content_create_new_tag": {
+    "message": "Neuen Tag erstellen",
+    "description": "Label for the create new tag button on twitch.tv pages."
+  },
+  "content_create_tag_placeholder": {
+    "message": "Tag-Namen eingeben…",
+    "description": "Placeholder text shown when creating a new tag on twitch.tv pages."
+  },
+  "content_create_tag_save": {
+    "message": "Tag erstellen",
+    "description": "Tooltip text for the save button when creating a new tag on twitch.tv pages."
+  },
+  "content_error_toggle_star": {
+    "message": "Favoritenstatus konnte nicht aktualisiert werden. Bitte versuche es erneut.",
+    "description": "Alert shown when the star toggle fails on twitch.tv pages."
+  },
+  "content_error_toggle_tag": {
+    "message": "Tag-Zuweisung konnte nicht aktualisiert werden. Bitte versuche es erneut.",
+    "description": "Alert shown when assigning or unassigning a tag fails on twitch.tv pages."
+  },
+  "content_error_create_tag": {
+    "message": "Tag konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "description": "Alert shown when creating a tag from twitch.tv pages fails."
+  },
+  "content_add_to_starred": {
+    "message": "Zu Favoriten hinzufügen",
+    "description": "Label for adding a streamer to starred list."
+  },
+  "content_remove_from_starred": {
+    "message": "Aus Favoriten entfernen",
+    "description": "Label for removing a streamer from starred list."
+  },
+  "app_tag_menu_label": {
+    "message": "Tags zuweisen",
+    "description": "Aria label for the dashboard tag assignment menu."
+  },
+  "app_tag_menu_empty": {
+    "message": "Lege einen Tag an, um loszulegen.",
+    "description": "Message shown when no tags are available in the dashboard menu."
+  },
+  "app_meta_updated_minute": {
+    "message": "Vor 1 Minute aktualisiert",
+    "description": "Status text when the cache was refreshed one minute ago."
+  },
+  "app_meta_updated_minutes": {
+    "message": "Vor $MINUTES$ Minuten aktualisiert",
+    "description": "Status text when the cache was refreshed multiple minutes ago.",
+    "placeholders": {
+      "minutes": {
+        "content": "$1"
+      }
+    }
+  }
+}
