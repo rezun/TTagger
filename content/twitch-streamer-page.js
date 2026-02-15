@@ -879,7 +879,7 @@
       closeDropdown();
     };
 
-    document.addEventListener('click', handleOutsideClick, true);
+    trackEventListener(document, 'click', handleOutsideClick, true);
 
     // Reposition dropdown on scroll/resize
     const repositionOnScroll = () => {
@@ -888,8 +888,8 @@
       }
     };
 
-    window.addEventListener('scroll', repositionOnScroll, true);
-    window.addEventListener('resize', repositionOnScroll);
+    trackEventListener(window, 'scroll', repositionOnScroll, true);
+    trackEventListener(window, 'resize', repositionOnScroll);
 
     tagsContainer.appendChild(dropdownBtn);
     section.appendChild(tagsContainer);
