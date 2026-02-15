@@ -377,7 +377,7 @@ async function runLiveCheck() {
     const streamers = cache[CACHE_ITEMS_KEY];
     const starredStreamers = streamers.filter((streamer) => assignments[streamer.id]?.includes('favorite'));
     const starredIds = new Set(starredStreamers.map((streamer) => streamer.id));
-    const notificationPromises = [];
+    const pendingNotifications = [];
 
     for (const streamer of starredStreamers) {
       const previousEntry = liveState.get(streamer.id) || { isLive: false, startedAt: null };
@@ -400,16 +400,12 @@ async function runLiveCheck() {
           continue;
         }
 
-        const streamUrl = `https://www.twitch.tv/${streamer.login}`;
-        notificationPromises.push(
-          (async () => {
-            try {
-              await createLiveNotification(streamer.displayName, streamUrl, streamer.avatarUrl);
-            } catch (error) {
-              console.error('Failed to create live notification', streamer.id, error);
-            }
-          })(),
-        );
+        pendingNotifications.push({
+          displayName: streamer.displayName,
+          login: streamer.login,
+          avatarUrl: streamer.avatarUrl,
+          id: streamer.id,
+        });
       }
 
       liveState.set(streamer.id, {
@@ -424,8 +420,19 @@ async function runLiveCheck() {
       }
     }
 
-    if (notificationPromises.length > 0) {
-      await Promise.allSettled(notificationPromises);
+    // Send notifications sequentially with a short delay between each so
+    // macOS notification center doesn't collapse or replace them.
+    for (let i = 0; i < pendingNotifications.length; i++) {
+      const { displayName, login, avatarUrl, id } = pendingNotifications[i];
+      const streamUrl = `https://www.twitch.tv/${login}`;
+      try {
+        await createLiveNotification(displayName, streamUrl, avatarUrl);
+      } catch (error) {
+        console.error('Failed to create live notification', id, error);
+      }
+      if (i < pendingNotifications.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
     }
 
     await saveLiveState();
