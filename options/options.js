@@ -2,6 +2,7 @@ import { sendRuntimeMessage, invoke, addRuntimeListener } from '../src/util/exte
 import { handleUserError } from '../src/util/errors.js';
 import { localize, getMessageStrict, setLanguageOverride } from '../src/util/i18n.js';
 import { getPreferences, constants as storageConstants } from '../src/storage/index.js';
+import { createLiveNotification } from '../src/util/notifications.js';
 
 let currentLanguagePreference = 'system';
 let activeLanguageOverride = null;
@@ -51,6 +52,10 @@ const clearLogButton = document.getElementById('clear-log');
 const exportLogButton = document.getElementById('export-log');
 const logEntriesEl = document.getElementById('log-entries');
 const languageSelect = document.getElementById('language-select');
+
+const testNotificationsButton = document.getElementById('test-notifications-button');
+const toggleDebuggingButton = document.getElementById('toggle-debugging');
+const debuggingPanel = document.getElementById('debugging-panel');
 
 const NOTIFICATION_CUTOFF_DEFAULT = storageConstants.DEFAULT_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
 const NOTIFICATION_CUTOFF_MIN = storageConstants.MIN_NOTIFICATION_MAX_STREAM_AGE_MINUTES;
@@ -697,6 +702,50 @@ async function handleExportLog() {
   }
 }
 
+const IS_MACOS = navigator.userAgentData?.platform === 'macOS'
+  || /\bMac\b/i.test(navigator.userAgent);
+const NOTIFICATION_STAGGER_MS = IS_MACOS ? 5000 : 0;
+
+async function handleTestNotifications() {
+  hideStatus();
+  const button = testNotificationsButton;
+  if (button) button.disabled = true;
+
+  const testStreamers = [
+    { name: 'TestStreamer1', login: 'teststreamer1' },
+    { name: 'TestStreamer2', login: 'teststreamer2' },
+    { name: 'TestStreamer3', login: 'teststreamer3' },
+  ];
+
+  try {
+    for (let i = 0; i < testStreamers.length; i++) {
+      const { name, login } = testStreamers[i];
+      await createLiveNotification(name, `https://www.twitch.tv/${login}`, null);
+      if (NOTIFICATION_STAGGER_MS > 0 && i < testStreamers.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, NOTIFICATION_STAGGER_MS));
+      }
+    }
+    const delayLabel = NOTIFICATION_STAGGER_MS > 0 ? `${NOTIFICATION_STAGGER_MS / 1000}s stagger` : 'no stagger';
+    showStatus(`Sent 3 test notifications (${delayLabel}).`, 'success');
+  } catch (error) {
+    console.error('Test notification failed', error);
+    showStatus(error?.message || 'Failed to send test notifications', 'danger');
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+let debugLogLoaded = false;
+
+function handleToggleDebugging() {
+  if (!debuggingPanel) return;
+  const isHidden = debuggingPanel.classList.toggle('d-none');
+  if (!isHidden && !debugLogLoaded) {
+    debugLogLoaded = true;
+    loadUpdateLog();
+  }
+}
+
 function showVersion() {
   const el = document.getElementById('version-info');
   if (el) {
@@ -723,6 +772,8 @@ function init() {
   twitchHighlightColorResetButton?.addEventListener('click', handleHighlightColorReset);
   debugLoggingToggle?.addEventListener('change', handleDebugLoggingToggle);
   resetButton?.addEventListener('click', handleReset);
+  testNotificationsButton?.addEventListener('click', handleTestNotifications);
+  toggleDebuggingButton?.addEventListener('click', handleToggleDebugging);
   refreshLogButton.addEventListener('click', loadUpdateLog);
   clearLogButton.addEventListener('click', handleClearLog);
   exportLogButton.addEventListener('click', handleExportLog);
@@ -730,7 +781,6 @@ function init() {
 
   showVersion();
   loadNotificationPreference();
-  loadUpdateLog();
 }
 
 if (document.readyState === 'loading') {

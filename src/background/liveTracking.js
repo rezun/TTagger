@@ -7,6 +7,10 @@ import { refreshFollowCache, CACHE_ITEMS_KEY } from './followCache.js';
 import { getAuthStatus } from '../../background/oauth.js';
 import { isValidTwitchUsername } from '../util/validators.js';
 
+const IS_MACOS = navigator.userAgentData?.platform === 'macOS'
+  || /\bMac\b/i.test(navigator.userAgent);
+const NOTIFICATION_STAGGER_MS = IS_MACOS ? 5000 : 0;
+
 const LIVE_CHECK_ALARM_NAME = 'live-check-alarm';
 const LIVE_STATE_KEY = 'liveState';
 const BADGE_COLOR = '#9146FF';
@@ -420,8 +424,8 @@ async function runLiveCheck() {
       }
     }
 
-    // Send notifications sequentially with a short delay between each so
-    // macOS notification center doesn't collapse or replace them.
+    // On macOS, banner notifications replace each other when fired rapidly,
+    // so stagger them with a delay. On Windows, toasts stack natively.
     for (let i = 0; i < pendingNotifications.length; i++) {
       const { displayName, login, avatarUrl, id } = pendingNotifications[i];
       const streamUrl = `https://www.twitch.tv/${login}`;
@@ -430,8 +434,8 @@ async function runLiveCheck() {
       } catch (error) {
         console.error('Failed to create live notification', id, error);
       }
-      if (i < pendingNotifications.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      if (NOTIFICATION_STAGGER_MS > 0 && i < pendingNotifications.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, NOTIFICATION_STAGGER_MS));
       }
     }
 

@@ -1063,5 +1063,13 @@
         "content": "$1"
       }
     }
+  },
+  "options_debugging_toggle": {
+    "message": "Fehlerbehebung",
+    "description": "Button text to show or hide the debugging panel in settings."
+  },
+  "options_test_notifications_button": {
+    "message": "Benachrichtigungen testen (x3)",
+    "description": "Button text to send three test notifications for debugging."
   }
 }
