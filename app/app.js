@@ -32,6 +32,7 @@ import {
 } from '../src/app/render.js';
 import { sortTagsByOrder } from '../src/util/sorting.js';
 import { getPreferences } from '../src/storage/index.js';
+import { normalizeNotificationTagIds } from '../src/util/notificationTags.js';
 
 const localizationReady = (async () => {
   try {
@@ -743,6 +744,30 @@ function getRenderActions() {
       onRenameTag: promptRenameTag,
       onUpdateTagColor: promptUpdateTagColor,
       onDeleteTag: confirmDeleteTag,
+      onToggleTagNotification: async (tagId, enabled) => {
+        const validTagIds = Object.keys(state.tagState?.tags || {});
+        const currentTagIds = Array.isArray(state.preferences.notificationTagIds)
+          ? state.preferences.notificationTagIds.map(String)
+          : [];
+        const nextTagIds = enabled
+          ? [...currentTagIds, String(tagId)]
+          : currentTagIds.filter((id) => id !== String(tagId));
+        const normalized = normalizeNotificationTagIds(nextTagIds, validTagIds);
+
+        await withTagOperationLoading(async () => {
+          try {
+            const data = await invoke('preferences:update', {
+              preferences: { notificationTagIds: normalized },
+            });
+            if (data.preferences) {
+              mergePreferences(data.preferences);
+            }
+            render();
+          } catch (error) {
+            handleUserError(error, t('app_error_update_tag_notifications'));
+          }
+        });
+      },
     },
     card: {
       onToggleFavorite: async (streamerId, isFavorite) => {

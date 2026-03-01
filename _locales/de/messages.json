@@ -230,7 +230,7 @@
     }
   },
   "popup_signin_message": {
-    "message": "Melde dich bei Twitch an, um deine Favoriten zu verwalten und Live-Benachrichtigungen zu erhalten.",
+    "message": "Melde dich bei Twitch an, um deine Tags zu verwalten und Live-Benachrichtigungen zu erhalten.",
     "description": "Instructional text shown when the user needs to sign in from the popup."
   },
   "popup_signin_button": {
@@ -334,7 +334,7 @@
     "description": "Button text for resetting tags and favorites."
   },
   "options_notifications_help": {
-    "message": "Erhalte Benachrichtigungen, wenn Favoriten live gehen. Eine Anmeldung ist erforderlich.",
+    "message": "Erhalte Benachrichtigungen, wenn Streamer in deinen aktivierten Benachrichtigungs-Tags live gehen. Eine Anmeldung ist erforderlich.",
     "description": "Helper text explaining notification settings."
   },
   "options_notifications_toggle": {
@@ -515,7 +515,7 @@
     "description": "Update log table column heading."
   },
   "options_table_header_starred": {
-    "message": "Favoriten",
+    "message": "Verfolgt",
     "description": "Update log table column heading."
   },
   "options_table_header_cache_age": {
@@ -764,6 +764,14 @@
     "message": "Benachrichtigungen umschalten",
     "description": "Tooltip text for the notifications toggle button."
   },
+  "popup_notifications_title_enabled": {
+    "message": "Benachrichtigungen aktiviert",
+    "description": "Tooltip text shown when popup notifications are currently enabled."
+  },
+  "popup_notifications_title_disabled": {
+    "message": "Benachrichtigungen deaktiviert",
+    "description": "Tooltip text shown when popup notifications are currently disabled."
+  },
   "popup_refresh_title": {
     "message": "Aktualisieren",
     "description": "Tooltip text for the refresh button in the popup."
@@ -854,6 +862,57 @@
   "app_error_update_tag_assignment": {
     "message": "Tag-Zuweisung konnte nicht aktualisiert werden.",
     "description": "Error shown when a tag assignment toggle fails."
+  },
+  "app_error_update_tag_notifications": {
+    "message": "Tag-Benachrichtigungen konnten nicht aktualisiert werden.",
+    "description": "Error shown when updating per-tag notification settings fails."
+  },
+  "app_tag_notifications_enable_tooltip": {
+    "message": "Benachrichtigungen fuer dieses Tag aktivieren",
+    "description": "Tooltip for enabling notifications on a tag row."
+  },
+  "app_tag_notifications_disable_tooltip": {
+    "message": "Benachrichtigungen fuer dieses Tag deaktivieren",
+    "description": "Tooltip for disabling notifications on a tag row."
+  },
+  "app_tag_notifications_enable_aria": {
+    "message": "Benachrichtigungen fuer $TAG$ aktivieren",
+    "description": "Aria label for enabling notifications on a tag.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_tag_notifications_disable_aria": {
+    "message": "Benachrichtigungen fuer $TAG$ deaktivieren",
+    "description": "Aria label for disabling notifications on a tag.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_tag_notifications_on_short": {
+    "message": "An",
+    "description": "Short badge text indicating notifications are enabled for a tag."
+  },
+  "app_tag_notifications_off_short": {
+    "message": "Aus",
+    "description": "Short badge text indicating notifications are disabled for a tag."
+  },
+  "app_tag_notifications_enabled_indicator_tooltip": {
+    "message": "Benachrichtigungen aktiviert",
+    "description": "Tooltip text for the bell indicator on tags with notifications enabled."
+  },
+  "app_tag_notifications_enabled_indicator_aria": {
+    "message": "Benachrichtigungen fuer $TAG$ aktiviert",
+    "description": "Aria label for the bell indicator on tags with notifications enabled.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
   },
   "app_error_reorder_tags": {
     "message": "Tags konnten nicht neu sortiert werden.",

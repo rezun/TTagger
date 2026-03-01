@@ -28,6 +28,7 @@
 
 import {
   TAG_ALL,
+  TAG_STARRED,
   THEME_SYSTEM,
   LANGUAGE_SYSTEM,
 } from '../util/constants.js';
@@ -43,6 +44,7 @@ export const defaultPreferences = {
   selectedTagId: TAG_ALL,
   themeMode: THEME_SYSTEM,
   notificationsEnabled: false,
+  notificationTagIds: [TAG_STARRED],
   openInCurrentTab: false,
   twitchHighlighting: true,
   twitchSidebarTags: true,

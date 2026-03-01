@@ -6,6 +6,7 @@ import { normalizeTagState } from './tagState.js';
 import { refreshFollowCache, CACHE_ITEMS_KEY } from './followCache.js';
 import { getAuthStatus } from '../../background/oauth.js';
 import { isValidTwitchUsername } from '../util/validators.js';
+import { getEffectiveNotificationTagIds } from '../util/notificationTags.js';
 
 const IS_MACOS = navigator.userAgentData?.platform === 'macOS'
   || /\bMac\b/i.test(navigator.userAgent);
@@ -31,11 +32,13 @@ let lastRunMeta = {
 };
 
 async function logUpdate(trigger, metadata = {}) {
+  const trackedCount = metadata.trackedCount ?? metadata.starredCount ?? 0;
   const entry = {
     timestamp: Date.now(),
     trigger, // 'alarm' | 'manual' | 'fallback' | 'initialization'
     liveCount: metadata.liveCount || 0,
-    starredCount: metadata.starredCount || 0,
+    trackedCount,
+    starredCount: trackedCount,
     cacheAge: metadata.cacheAge || 0,
     success: metadata.success !== false,
     error: metadata.error || null,
@@ -217,12 +220,21 @@ export async function stopLiveChecks() {
   }
 }
 
-function getLiveStarredCount() {
+function getLiveTrackedCount() {
   let count = 0;
   liveState.forEach((entry) => {
     if (entry?.isLive) count += 1;
   });
   return count;
+}
+
+function getTrackedStreamerIds(assignments = {}, notificationTagIds = []) {
+  const trackedTagSet = new Set((notificationTagIds || []).map(String));
+  return new Set(
+    Object.entries(assignments)
+      .filter(([, tagIds]) => Array.isArray(tagIds) && tagIds.some((tagId) => trackedTagSet.has(String(tagId))))
+      .map(([streamerId]) => String(streamerId)),
+  );
 }
 
 async function updateLiveBadge(liveCount) {
@@ -241,7 +253,7 @@ async function updateLiveBadge(liveCount) {
 
 /**
  * Sync live-state entries with current assignments and live status.
- * Removes streamers that are no longer starred or have gone offline.
+ * Removes streamers that are no longer in notification scope or have gone offline.
  * Keeps the badge count accurate after tag changes or status updates.
  * @param {Record<string, Array<string>>} [assignments]
  * @returns {Promise<void>}
@@ -249,12 +261,13 @@ async function updateLiveBadge(liveCount) {
 export async function syncLiveAssignments(assignments = {}, options = {}) {
   const { changedStreamerId = null } = options;
   const normalizedChangedId = changedStreamerId != null ? String(changedStreamerId) : null;
-
-  const starredIds = new Set(
-    Object.entries(assignments)
-      .filter(([, tagIds]) => Array.isArray(tagIds) && tagIds.includes('favorite'))
-      .map(([streamerId]) => String(streamerId)),
-  );
+  const [preferences, rawTagState] = await Promise.all([
+    getPreferences(),
+    getTagState(),
+  ]);
+  const tagState = normalizeTagState(rawTagState);
+  const trackedTagIds = getEffectiveNotificationTagIds(preferences, tagState);
+  const trackedStreamerIds = getTrackedStreamerIds(assignments, trackedTagIds);
 
   // Get current follow cache to check live status
   let cache = await refreshFollowCache(false);
@@ -288,15 +301,15 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
 
   let modified = false;
 
-  // Remove streamers that are no longer starred OR have gone offline
+  // Remove streamers that are no longer in notification scope OR have gone offline
   for (const streamerId of Array.from(liveState.keys())) {
-    const isStarred = starredIds.has(streamerId);
+    const isTracked = trackedStreamerIds.has(streamerId);
     const isCurrentlyLive = liveStatusMap.get(streamerId);
     const previousEntry = liveState.get(streamerId) || { isLive: false, startedAt: null };
     const wasLive = !!previousEntry.isLive;
 
-    // Remove if no longer starred
-    if (!isStarred) {
+    // Remove if no longer tracked
+    if (!isTracked) {
       liveState.delete(streamerId);
       modified = true;
       continue;
@@ -321,8 +334,8 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
     }
   }
 
-  // Add newly starred live streamers that were not previously tracked
-  starredIds.forEach((streamerId) => {
+  // Add newly tracked live streamers that were not previously tracked
+  trackedStreamerIds.forEach((streamerId) => {
     if (liveState.has(streamerId)) {
       return;
     }
@@ -340,7 +353,7 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
 
   if (modified) {
     await saveLiveState();
-    await updateLiveBadge(getLiveStarredCount());
+    await updateLiveBadge(getLiveTrackedCount());
   }
 }
 
@@ -358,12 +371,12 @@ async function runLiveCheck() {
   const auth = await getAuthStatus();
   if (!auth) {
     await clearLiveState();
-    return { success: true, liveCount: 0, starredCount: 0, cacheAge: 0, skipped: 'no_auth' };
+    return { success: true, liveCount: 0, trackedCount: 0, cacheAge: 0, skipped: 'no_auth' };
   }
 
   const cache = await refreshFollowCache(false);
   if (!cache || !cache[CACHE_ITEMS_KEY]) {
-    return { success: true, liveCount: 0, starredCount: 0, cacheAge: 0, skipped: 'no_cache' };
+    return { success: true, liveCount: 0, trackedCount: 0, cacheAge: 0, skipped: 'no_cache' };
   }
 
   try {
@@ -377,13 +390,18 @@ async function runLiveCheck() {
 
     const tagState = normalizeTagState(await getTagState());
     const assignments = tagState.assignments || {};
+    const trackedTagIds = getEffectiveNotificationTagIds(preferences, tagState);
+    const trackedTagSet = new Set(trackedTagIds.map(String));
 
     const streamers = cache[CACHE_ITEMS_KEY];
-    const starredStreamers = streamers.filter((streamer) => assignments[streamer.id]?.includes('favorite'));
-    const starredIds = new Set(starredStreamers.map((streamer) => streamer.id));
+    const trackedStreamers = streamers.filter((streamer) => {
+      const streamerTags = assignments[streamer.id] || [];
+      return Array.isArray(streamerTags) && streamerTags.some((tagId) => trackedTagSet.has(String(tagId)));
+    });
+    const trackedIds = new Set(trackedStreamers.map((streamer) => streamer.id));
     const pendingNotifications = [];
 
-    for (const streamer of starredStreamers) {
+    for (const streamer of trackedStreamers) {
       const previousEntry = liveState.get(streamer.id) || { isLive: false, startedAt: null };
       const wasLive = !!previousEntry.isLive;
       const isLive = streamer.isLive;
@@ -419,7 +437,7 @@ async function runLiveCheck() {
     }
 
     for (const streamerId of Array.from(liveState.keys())) {
-      if (!starredIds.has(streamerId)) {
+      if (!trackedIds.has(streamerId)) {
         liveState.delete(streamerId);
       }
     }
@@ -440,11 +458,11 @@ async function runLiveCheck() {
     }
 
     await saveLiveState();
-    await updateLiveBadge(getLiveStarredCount());
+    await updateLiveBadge(getLiveTrackedCount());
 
     const cacheAge = Date.now() - cache.fetchedAt;
-    const liveCount = getLiveStarredCount();
-    const starredCount = starredStreamers.length;
+    const liveCount = getLiveTrackedCount();
+    const trackedCount = trackedStreamers.length;
 
     try {
       await setPopupSnapshot({
@@ -461,7 +479,7 @@ async function runLiveCheck() {
     return {
       success: true,
       liveCount,
-      starredCount,
+      trackedCount,
       cacheAge
     };
   } catch (error) {
@@ -469,7 +487,7 @@ async function runLiveCheck() {
     return {
       success: false,
       liveCount: 0,
-      starredCount: 0,
+      trackedCount: 0,
       cacheAge: 0,
       error: error.message
     };
@@ -529,13 +547,13 @@ export async function initializeLiveTracking() {
       await logUpdate('initialization', {
         success: true,
         liveCount: 0,
-        starredCount: 0,
+        trackedCount: 0,
         duration: Date.now() - startTime
       });
       return;
     }
 
-    await updateLiveBadge(getLiveStarredCount());
+    await updateLiveBadge(getLiveTrackedCount());
     await ensureLiveChecksRunning({ runImmediately: true, trigger: 'initialization' });
   } catch (error) {
     await logUpdate('initialization', {

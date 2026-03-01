@@ -242,6 +242,57 @@
     "message": "Failed to update tag assignment.",
     "description": "Error shown when a tag assignment toggle fails."
   },
+  "app_error_update_tag_notifications": {
+    "message": "Failed to update tag notifications.",
+    "description": "Error shown when updating per-tag notification settings fails."
+  },
+  "app_tag_notifications_enable_tooltip": {
+    "message": "Enable notifications for this tag",
+    "description": "Tooltip for enabling notifications on a tag row."
+  },
+  "app_tag_notifications_disable_tooltip": {
+    "message": "Disable notifications for this tag",
+    "description": "Tooltip for disabling notifications on a tag row."
+  },
+  "app_tag_notifications_enable_aria": {
+    "message": "Enable notifications for $TAG$",
+    "description": "Aria label for enabling notifications on a tag.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_tag_notifications_disable_aria": {
+    "message": "Disable notifications for $TAG$",
+    "description": "Aria label for disabling notifications on a tag.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
+  "app_tag_notifications_on_short": {
+    "message": "On",
+    "description": "Short badge text indicating notifications are enabled for a tag."
+  },
+  "app_tag_notifications_off_short": {
+    "message": "Off",
+    "description": "Short badge text indicating notifications are disabled for a tag."
+  },
+  "app_tag_notifications_enabled_indicator_tooltip": {
+    "message": "Notifications enabled",
+    "description": "Tooltip text for the bell indicator on tags with notifications enabled."
+  },
+  "app_tag_notifications_enabled_indicator_aria": {
+    "message": "$TAG$ notifications enabled",
+    "description": "Aria label for the bell indicator on tags with notifications enabled.",
+    "placeholders": {
+      "tag": {
+        "content": "$1"
+      }
+    }
+  },
   "app_error_reorder_tags": {
     "message": "Failed to reorder tags.",
     "description": "Error shown when tag reordering fails."
@@ -337,7 +388,7 @@
     }
   },
   "popup_signin_message": {
-    "message": "Sign in to Twitch to manage your starred streamers and get live notifications.",
+    "message": "Sign in to Twitch to manage your tags and get live notifications.",
     "description": "Instructional text shown when the user needs to sign in from the popup."
   },
   "popup_signin_button": {
@@ -441,7 +492,7 @@
     "description": "Button text for resetting tags and favorites."
   },
   "options_notifications_help": {
-    "message": "Get notified when starred streamers go live. Requires authentication.",
+    "message": "Get notified when streamers in your enabled notification tags go live. Requires authentication.",
     "description": "Helper text explaining notification settings."
   },
   "options_notifications_toggle": {
@@ -622,7 +673,7 @@
     "description": "Update log table column heading."
   },
   "options_table_header_starred": {
-    "message": "Starred",
+    "message": "Tracked",
     "description": "Update log table column heading."
   },
   "options_table_header_cache_age": {
@@ -870,6 +921,14 @@
   "popup_notifications_title": {
     "message": "Toggle notifications",
     "description": "Tooltip text for the notifications toggle button."
+  },
+  "popup_notifications_title_enabled": {
+    "message": "Notifications enabled",
+    "description": "Tooltip text shown when popup notifications are currently enabled."
+  },
+  "popup_notifications_title_disabled": {
+    "message": "Notifications disabled",
+    "description": "Tooltip text shown when popup notifications are currently disabled."
   },
   "popup_refresh_title": {
     "message": "Refresh",

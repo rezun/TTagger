@@ -44,6 +44,12 @@ function isCustomTagId(tagId) {
   return key !== TAG_ALL && key !== TAG_UNTAGGED && key !== TAG_STARRED;
 }
 
+function isNotificationToggleTag(tagId) {
+  if (!tagId && tagId !== 0) return false;
+  const key = String(tagId);
+  return key === TAG_STARRED || isCustomTagId(key);
+}
+
 /**
  * Human-friendly "last updated" string for the follow cache timestamp.
  * @param {number|null} timestamp
@@ -272,6 +278,7 @@ export function adjustTagMenuPosition(menu, trigger) {
  * @returns {Array<{id:string|null, label:string, count:number, liveCount:number, color?:string, isSelected:boolean}>}
  */
 function buildTagListEntries(selectedTagId, tags, usage, liveCounts) {
+  const notificationTagIds = new Set((state.preferences.notificationTagIds || []).map(String));
   const total = state.follows.length;
   const untaggedCount = state.follows.filter((item) => !getAssignmentsFor(item.id).length).length;
 
@@ -281,6 +288,7 @@ function buildTagListEntries(selectedTagId, tags, usage, liveCounts) {
       label: 'All',
       count: total,
       liveCount: liveCounts.total,
+      notificationsEnabled: false,
       isSelected: selectedTagId === TAG_ALL,
     },
     {
@@ -288,6 +296,7 @@ function buildTagListEntries(selectedTagId, tags, usage, liveCounts) {
       label: 'Untagged',
       count: untaggedCount,
       liveCount: liveCounts.untagged,
+      notificationsEnabled: false,
       isSelected: selectedTagId === TAG_UNTAGGED,
     },
   ];
@@ -298,6 +307,7 @@ function buildTagListEntries(selectedTagId, tags, usage, liveCounts) {
     count: usage[TAG_STARRED] || 0,
     liveCount: liveCounts.tags[TAG_STARRED] || 0,
     color: tags[TAG_STARRED]?.color,
+    notificationsEnabled: notificationTagIds.has(TAG_STARRED),
     isSelected: selectedTagId === TAG_STARRED,
   };
   entries.push(favorite);
@@ -312,6 +322,7 @@ function buildTagListEntries(selectedTagId, tags, usage, liveCounts) {
         count: usage[tag.id] || 0,
         liveCount: liveCounts.tags[String(tag.id)] || 0,
         color: tag.color,
+        notificationsEnabled: notificationTagIds.has(String(tag.id)),
         isSelected: selectedTagId === tag.id,
       });
     });
@@ -361,13 +372,31 @@ function createTagListItem(entry, actions, tagRecord, options = {}) {
   labelText.className = 'tag-name-text';
   labelText.textContent = entry.label;
   labelWrapper.appendChild(labelText);
+
+  if (entry.notificationsEnabled && isNotificationToggleTag(entry.id)) {
+    const indicator = document.createElement('span');
+    indicator.className = 'tag-notification-indicator';
+    indicator.setAttribute('role', 'img');
+    indicator.setAttribute(
+      'aria-label',
+      t('app_tag_notifications_enabled_indicator_aria', [entry.label]),
+    );
+    indicator.setAttribute('title', t('app_tag_notifications_enabled_indicator_tooltip'));
+    indicator.innerHTML = `
+      <svg width="14" height="14" fill="currentColor" aria-hidden="true" focusable="false">
+        <use href="../assets/icons/bell.svg#icon"></use>
+      </svg>
+    `;
+    labelWrapper.appendChild(indicator);
+  }
   item.appendChild(labelWrapper);
 
   const right = document.createElement('div');
   right.className = 'd-flex align-items-center gap-2';
+
   right.appendChild(createCountBadge(entry.count, entry.liveCount));
 
-  if (!isMoveMode && entry.id && entry.id !== TAG_UNTAGGED && entry.id !== TAG_STARRED) {
+  if (!isMoveMode && entry.id && entry.id !== TAG_UNTAGGED) {
     right.appendChild(createTagActionMenu(entry, actions, tagRecord));
   }
 
@@ -426,24 +455,40 @@ function createTagActionMenu(entry, actions, tagRecord) {
   const menu = document.createElement('ul');
   menu.className = 'dropdown-menu dropdown-menu-end';
 
-  menu.appendChild(createMenuItem('Rename', () => {
-    hideDropdown(toggle);
-    actions.onRenameTag(entry.id, tagRecord?.name);
-  }));
-
-  menu.appendChild(createMenuItem('Change color', () => {
-    hideDropdown(toggle);
-    actions.onUpdateTagColor(entry.id, tagRecord?.color);
-  }));
-
-  menu.appendChild(createDividerItem());
-
-  menu.appendChild(
-    createMenuItem('Delete', () => {
+  if (isNotificationToggleTag(entry.id)) {
+    const notificationActionLabel = entry.notificationsEnabled
+      ? t('app_tag_notifications_disable_tooltip')
+      : t('app_tag_notifications_enable_tooltip');
+    menu.appendChild(createMenuItem(notificationActionLabel, () => {
       hideDropdown(toggle);
-      actions.onDeleteTag(entry.id, tagRecord?.name);
-    }, 'dropdown-item text-danger'),
-  );
+      actions.onToggleTagNotification?.(String(entry.id), !entry.notificationsEnabled);
+    }));
+  }
+
+  if (isCustomTagId(entry.id)) {
+    if (menu.children.length) {
+      menu.appendChild(createDividerItem());
+    }
+
+    menu.appendChild(createMenuItem('Rename', () => {
+      hideDropdown(toggle);
+      actions.onRenameTag(entry.id, tagRecord?.name);
+    }));
+
+    menu.appendChild(createMenuItem('Change color', () => {
+      hideDropdown(toggle);
+      actions.onUpdateTagColor(entry.id, tagRecord?.color);
+    }));
+
+    menu.appendChild(createDividerItem());
+
+    menu.appendChild(
+      createMenuItem('Delete', () => {
+        hideDropdown(toggle);
+        actions.onDeleteTag(entry.id, tagRecord?.name);
+      }, 'dropdown-item text-danger'),
+    );
+  }
 
   wrapper.appendChild(toggle);
   wrapper.appendChild(menu);

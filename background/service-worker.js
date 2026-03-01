@@ -1,5 +1,12 @@
 import { extension, addRuntimeListener } from '../src/util/extension.js';
-import { getPreferences, setPreferences, clearFollowCache, getUpdateLog, clearUpdateLog } from '../src/storage/index.js';
+import {
+  getPreferences,
+  setPreferences,
+  clearFollowCache,
+  getUpdateLog,
+  clearUpdateLog,
+  getTagState,
+} from '../src/storage/index.js';
 import { startOAuthFlow, signOut, getAuthStatus } from './oauth.js';
 import { broadcastAuthStatus } from '../src/background/auth.js';
 import {
@@ -19,11 +26,58 @@ import {
   replaceAssignments,
   resetTagStateToDefault,
   reorderTags,
+  normalizeTagState,
 } from '../src/background/tagState.js';
 import { handleExport, handleImport } from '../src/background/importExport.js';
 import { getDashboardPayload } from '../src/background/payload.js';
+import { normalizeNotificationTagIds } from '../src/util/notificationTags.js';
 
 extension.alarms.onAlarm.addListener(handleLiveAlarm);
+
+function areStringArraysEqual(a = [], b = []) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+    return false;
+  }
+  return a.every((value, index) => value === b[index]);
+}
+
+function broadcastPreferencesUpdated(preferences) {
+  try {
+    extension.runtime.sendMessage({ type: 'preferences:updated', preferences });
+  } catch (error) {
+    const messageText = error && error.message ? error.message : String(error);
+    if (/receiving end does not exist/i.test(messageText) || /message port closed/i.test(messageText)) {
+      console.debug('[ServiceWorker] No listeners for preferences:updated broadcast.');
+    } else {
+      console.warn('[ServiceWorker] Failed to broadcast preferences update', error);
+    }
+  }
+}
+
+async function sanitizeNotificationTagPreferences(tagStateInput = null) {
+  const [currentPreferences, rawTagState] = await Promise.all([
+    getPreferences(),
+    tagStateInput ? Promise.resolve(tagStateInput) : getTagState(),
+  ]);
+  const tagState = normalizeTagState(rawTagState);
+  const validTagIds = Object.keys(tagState.tags || {});
+  const normalizedTagIds = normalizeNotificationTagIds(
+    currentPreferences.notificationTagIds,
+    validTagIds,
+  );
+
+  if (areStringArraysEqual(currentPreferences.notificationTagIds || [], normalizedTagIds)) {
+    return currentPreferences;
+  }
+
+  const nextPreferences = {
+    ...currentPreferences,
+    notificationTagIds: normalizedTagIds,
+  };
+  await setPreferences(nextPreferences);
+  broadcastPreferencesUpdated(nextPreferences);
+  return nextPreferences;
+}
 
 const handlers = {
   async 'oauth:start'() {
@@ -95,6 +149,8 @@ const handlers = {
 
   async 'tag:remove'(message) {
     const state = await removeTag(message.tagId);
+    await sanitizeNotificationTagPreferences(state);
+    await syncLiveAssignments(state.assignments);
     return { tagState: state };
   },
 
@@ -117,23 +173,22 @@ const handlers = {
 
   async 'preferences:update'(message) {
     const current = await getPreferences();
-    const next = { ...current, ...message.preferences };
+    const tagState = normalizeTagState(await getTagState());
+    const validTagIds = Object.keys(tagState.tags || {});
+    const proposed = { ...current, ...message.preferences };
+    const next = {
+      ...proposed,
+      notificationTagIds: normalizeNotificationTagIds(proposed.notificationTagIds, validTagIds),
+    };
     await setPreferences(next);
-    try {
-      extension.runtime.sendMessage({ type: 'preferences:updated', preferences: next });
-    } catch (error) {
-      const messageText = error && error.message ? error.message : String(error);
-      if (/receiving end does not exist/i.test(messageText) || /message port closed/i.test(messageText)) {
-        console.debug('[ServiceWorker] No listeners for preferences:updated broadcast.');
-      } else {
-        console.warn('[ServiceWorker] Failed to broadcast preferences update', error);
-      }
-    }
+    broadcastPreferencesUpdated(next);
+    await syncLiveAssignments(tagState.assignments);
     return { preferences: next };
   },
 
   async 'data:reset'() {
     const tagState = await resetTagStateToDefault();
+    await sanitizeNotificationTagPreferences(tagState);
     await clearLiveState();
     return { tagState };
   },
@@ -144,6 +199,7 @@ const handlers = {
 
   async 'data:import'(message) {
     const result = await handleImport(message.payload);
+    await sanitizeNotificationTagPreferences(result.tagState);
     await syncLiveAssignments(result.tagState.assignments);
     await ensureLiveChecksRunning({ runImmediately: true });
     return result;

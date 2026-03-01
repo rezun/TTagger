@@ -74,6 +74,14 @@ function updateNotificationIcon(enabled) {
     notificationToggleButton?.classList.remove('btn-outline-primary');
     notificationToggleButton?.classList.add('btn-outline-secondary');
   }
+
+  if (notificationToggleButton) {
+    const tooltip = enabled
+      ? t('popup_notifications_title_enabled')
+      : t('popup_notifications_title_disabled');
+    notificationToggleButton.setAttribute('title', tooltip);
+    notificationToggleButton.setAttribute('aria-label', tooltip);
+  }
 }
 
 function normalizeOpenInCurrentTab(value) {
@@ -225,6 +233,7 @@ function getSelectedTagName() {
 
 function applyLocalizedUiUpdates() {
   localize();
+  updateNotificationIcon(notificationsEnabled);
   updateLabelFilterButton();
   if (currentTagState) {
     const filtered = getFilteredStreamersByTag(currentFollows, currentTagState, selectedTagId);

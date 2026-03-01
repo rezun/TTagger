@@ -624,7 +624,7 @@ async function loadUpdateLog() {
           <td><small>${timeStr}</small></td>
           <td>${triggerBadge}</td>
           <td>${entry.liveCount || 0}</td>
-          <td>${entry.starredCount || 0}</td>
+          <td>${entry.trackedCount ?? entry.starredCount ?? 0}</td>
           <td><small>${formatDuration(entry.cacheAge)}</small></td>
           <td><small>${formatDuration(entry.duration)}</small></td>
           <td>${statusBadge}</td>

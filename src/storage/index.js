@@ -1,6 +1,7 @@
 import { storageGet, storageSet, storageRemove } from '../util/extension.js';
 import { TAG_STARRED } from '../util/constants.js';
 import { checkStorageQuota, getStorageCleanupSuggestions } from '../util/storageQuota.js';
+import { normalizeNotificationTagIds } from '../util/notificationTags.js';
 
 const AUTH_KEY = 'authState';
 const FOLLOW_CACHE_KEY = 'followCache';
@@ -25,6 +26,7 @@ const defaultPreferences = Object.freeze({
   popupSelectedTagId: TAG_STARRED,
   themeMode: 'system',
   notificationsEnabled: false,
+  notificationTagIds: [TAG_STARRED],
   openInCurrentTab: 'never', // 'never', 'always', or 'smart'
   twitchHighlighting: true,
   twitchSidebarTags: true,
@@ -192,6 +194,13 @@ export async function getPreferences() {
       );
       merged.notificationMaxStreamAgeMinutes = clamped;
     }
+
+    const validTagIds = new Set(Object.keys((await getTagState())?.tags || {}));
+    validTagIds.add(TAG_STARRED);
+    merged.notificationTagIds = normalizeNotificationTagIds(
+      merged.notificationTagIds,
+      Array.from(validTagIds),
+    );
 
     const highlightColor = typeof merged.twitchHighlightColor === 'string'
       ? merged.twitchHighlightColor.trim().toLowerCase()

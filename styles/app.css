@@ -326,6 +326,19 @@ body {
   color: var(--bs-primary, #0d6efd);
 }
 
+.tag-notification-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.45rem;
+  color: var(--bs-primary, #0d6efd);
+  flex-shrink: 0;
+}
+
+.tag-list .list-group-item.active .tag-notification-indicator {
+  color: #fff;
+}
+
 .tag-list.is-reordering .tag-dropdown-toggle {
   display: none;
 }
