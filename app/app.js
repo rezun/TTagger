@@ -749,9 +749,18 @@ function getRenderActions() {
         const currentTagIds = Array.isArray(state.preferences.notificationTagIds)
           ? state.preferences.notificationTagIds.map(String)
           : [];
-        const nextTagIds = enabled
-          ? [...currentTagIds, String(tagId)]
-          : currentTagIds.filter((id) => id !== String(tagId));
+        const normalizedTagId = String(tagId);
+        let nextTagIds;
+        if (enabled) {
+          const isFirstCustomEnableFromDefaultStarred = normalizedTagId !== TAG_STARRED
+            && currentTagIds.length === 1
+            && currentTagIds[0] === TAG_STARRED;
+          nextTagIds = isFirstCustomEnableFromDefaultStarred
+            ? [normalizedTagId]
+            : [...currentTagIds, normalizedTagId];
+        } else {
+          nextTagIds = currentTagIds.filter((id) => id !== normalizedTagId);
+        }
         const normalized = normalizeNotificationTagIds(nextTagIds, validTagIds);
 
         await withTagOperationLoading(async () => {

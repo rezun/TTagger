@@ -228,6 +228,19 @@ function getLiveTrackedCount() {
   return count;
 }
 
+function getLiveStarredCount(assignments = {}, liveStatusMap = new Map()) {
+  let count = 0;
+  Object.entries(assignments || {}).forEach(([streamerId, tagIds]) => {
+    if (!Array.isArray(tagIds) || !tagIds.includes('favorite')) {
+      return;
+    }
+    if (liveStatusMap.get(String(streamerId))) {
+      count += 1;
+    }
+  });
+  return count;
+}
+
 function getTrackedStreamerIds(assignments = {}, notificationTagIds = []) {
   const trackedTagSet = new Set((notificationTagIds || []).map(String));
   return new Set(
@@ -299,6 +312,8 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
     liveStatusMap.set(streamerId, !!streamer.isLive);
   });
 
+  const liveStarredCount = getLiveStarredCount(assignments, liveStatusMap);
+
   let modified = false;
 
   // Remove streamers that are no longer in notification scope OR have gone offline
@@ -353,8 +368,8 @@ export async function syncLiveAssignments(assignments = {}, options = {}) {
 
   if (modified) {
     await saveLiveState();
-    await updateLiveBadge(getLiveTrackedCount());
   }
+  await updateLiveBadge(liveStarredCount);
 }
 
 /**
@@ -394,6 +409,9 @@ async function runLiveCheck() {
     const trackedTagSet = new Set(trackedTagIds.map(String));
 
     const streamers = cache[CACHE_ITEMS_KEY];
+    const liveStatusMap = new Map(
+      streamers.map((streamer) => [String(streamer.id), !!streamer.isLive]),
+    );
     const trackedStreamers = streamers.filter((streamer) => {
       const streamerTags = assignments[streamer.id] || [];
       return Array.isArray(streamerTags) && streamerTags.some((tagId) => trackedTagSet.has(String(tagId)));
@@ -458,7 +476,8 @@ async function runLiveCheck() {
     }
 
     await saveLiveState();
-    await updateLiveBadge(getLiveTrackedCount());
+    const liveStarredCount = getLiveStarredCount(assignments, liveStatusMap);
+    await updateLiveBadge(liveStarredCount);
 
     const cacheAge = Date.now() - cache.fetchedAt;
     const liveCount = getLiveTrackedCount();
@@ -542,7 +561,7 @@ export async function initializeLiveTracking() {
       if (liveState.size) {
         await clearLiveState();
       } else {
-        await updateLiveBadge(0);
+    await updateLiveBadge(0);
       }
       await logUpdate('initialization', {
         success: true,
@@ -553,7 +572,7 @@ export async function initializeLiveTracking() {
       return;
     }
 
-    await updateLiveBadge(getLiveTrackedCount());
+    await updateLiveBadge(0);
     await ensureLiveChecksRunning({ runImmediately: true, trigger: 'initialization' });
   } catch (error) {
     await logUpdate('initialization', {
