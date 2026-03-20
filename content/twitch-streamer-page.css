@@ -8,6 +8,7 @@
 .ttagger-star-container {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   margin-right: 0.5rem;
 }
 
@@ -15,8 +16,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 4rem;
+  min-width: 4rem;
+  height: 4rem;
+  padding: 0;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
   --ttagger-star-color: #ffffff;
 }
 
@@ -25,28 +31,30 @@
 }
 
 .ttagger-star-button .ScCoreButtonLabel-sc-s7h2b7-0,
+.ttagger-star-button [data-a-target="tw-core-button-label-text"],
 .ttagger-star-button .Layout-sc-1xcs6mc-0,
-.ttagger-star-button .InjectLayout-sc-1i43xsx-0 {
+.ttagger-star-button .InjectLayout-sc-1i43xsx-0,
+.ttagger-star-button .ttagger-star-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.ttagger-star-button .ttagger-star-icon {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+}
+
 .ttagger-star-button svg {
   display: block;
+  width: 2rem;
+  height: 2rem;
 }
 
 .ttagger-star-button svg path {
   fill: var(--ttagger-star-color);
   transition: fill 0.2s ease-in-out;
-}
-
-.ttagger-star-button:hover {
-  transform: scale(1.05);
-}
-
-.ttagger-star-button:active {
-  transform: scale(0.95);
 }
 
 .ttagger-star-button.is-starred {
@@ -385,10 +393,6 @@
 @media (prefers-reduced-motion: reduce) {
   .ttagger-star-button {
     transition: none;
-  }
-
-  .ttagger-star-button:hover {
-    transform: none;
   }
 }
 

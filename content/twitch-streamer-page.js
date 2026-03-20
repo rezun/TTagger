@@ -472,7 +472,7 @@
     debug('Creating star button. Starred:', starred);
 
     const button = document.createElement('button');
-    button.className = 'ScCoreButton-sc-ocjdkq-0 cAajJv ttagger-star-button';
+    button.className = 'ScCoreButton-sc-ocjdkq-0 yezmM ttagger-star-button';
     button.setAttribute('data-ttagger-star', '');
     const addStarLabel = t('content_add_to_starred');
     const removeStarLabel = t('content_remove_from_starred');
@@ -485,19 +485,19 @@
     button.dataset.ttaggerStarred = starred ? 'true' : 'false';
 
     button.innerHTML = `
-      <div class="ScCoreButtonLabel-sc-s7h2b7-0 kaIUar">
-        <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 bLZXTb">
+      <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
+        <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">
           <div class="Layout-sc-1xcs6mc-0 ceVcik">
             <div class="InjectLayout-sc-1i43xsx-0 iDMNUO">
-              <figure class="ScFigure-sc-1hrsqw6-0 iozBbY tw-svg">
-              <svg width="20" height="20" viewBox="0 0 90 90" class="ScSvg-sc-1hrsqw6-1 dzvvut" aria-hidden="true" focusable="false">
-                <path d="${STAR_SVG_PATH}" fill="currentColor"></path>
-              </svg>
-            </figure>
+              <div class="ScSvgWrapper-sc-wkgzod-0 dVDUDh tw-svg ttagger-star-icon">
+                <svg width="24" height="24" viewBox="0 0 90 90" aria-hidden="true" focusable="false">
+                  <path d="${STAR_SVG_PATH}" fill="currentColor"></path>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     `;
 
     button.addEventListener('click', async (e) => {
