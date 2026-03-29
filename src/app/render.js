@@ -442,10 +442,8 @@ function createTagActionMenu(entry, actions, tagRecord) {
   toggle.setAttribute('title', 'Tag actions');
   toggle.setAttribute('aria-label', `Actions for tag ${entry.label}`);
   toggle.innerHTML = `
-    <svg class="icon-pencil" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-8.5 8.5A.5.5 0 0 1 6.5 12.5H3.707a.5.5 0 0 1-.5-.5V9.207a.5.5 0 0 1 .146-.354l8.5-8.5Z" />
-      <path d="M11.207 3.5 12.5 4.793 4.354 12.94a.5.5 0 0 1-.168.11l-2 1a.5.5 0 0 1-.671-.671l1-2a.5.5 0 0 1 .11-.168L11.207 3.5Z" />
-      <path d="M4 13h6v1H4z" />
+    <svg class="icon-ellipsis-v" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M8 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm0 5.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM8 15a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
     </svg>
   `;
   toggle.addEventListener('click', (event) => {
