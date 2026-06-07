@@ -1,5 +1,6 @@
 # Distribution builds
 dist/
+screenshots/
 
 # OS files
 .DS_Store
