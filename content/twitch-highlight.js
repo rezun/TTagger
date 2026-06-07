@@ -323,6 +323,44 @@ function extractUsername(href) {
 }
 
 /**
+ * Resolve the concrete avatar element to decorate. Twitch changes the wrapper
+ * structure for stories, co-streams, and accent states, but the primary avatar
+ * image remains inside the first `.tw-avatar` in the sidebar card.
+ * @param {Element} cardElement
+ * @returns {Element|null}
+ */
+function getAvatarHighlightTarget(cardElement) {
+  if (!cardElement) return null;
+
+  const avatarImage = cardElement.querySelector('.tw-image-avatar');
+  if (!avatarImage) {
+    return null;
+  }
+
+  return avatarImage.closest('.tw-avatar') || avatarImage.closest('.side-nav-card__avatar');
+}
+
+/**
+ * Remove stale highlight classes from previous selector strategies.
+ * @param {Element} cardElement
+ * @param {Element|null} exceptElement
+ */
+function clearAvatarHighlights(cardElement, exceptElement = null) {
+  if (!cardElement) return;
+
+  const highlightedElements = [
+    ...(cardElement.classList?.contains(HIGHLIGHT_CLASS) ? [cardElement] : []),
+    ...cardElement.querySelectorAll(`.${HIGHLIGHT_CLASS}`),
+  ];
+
+  highlightedElements.forEach(element => {
+    if (element !== exceptElement) {
+      element.classList.remove(HIGHLIGHT_CLASS);
+    }
+  });
+}
+
+/**
  * Apply or remove the highlight class for a sidebar card avatar.
  * @param {Element} cardElement
  * @param {string|null} username
@@ -330,14 +368,8 @@ function extractUsername(href) {
 function updateAvatarHighlight(cardElement, username) {
   if (!cardElement) return;
 
-  let avatarContainer = cardElement.querySelector('.side-nav-card__avatar');
-
-  if (!avatarContainer) {
-    const link = cardElement.querySelector('.side-nav-card__link');
-    if (link) {
-      avatarContainer = link.querySelector(':scope > div:first-child');
-    }
-  }
+  const avatarContainer = getAvatarHighlightTarget(cardElement);
+  clearAvatarHighlights(cardElement, avatarContainer);
 
   if (!avatarContainer) {
     return;
