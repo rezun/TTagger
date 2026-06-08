@@ -796,17 +796,8 @@
     label.textContent = t('content_no_tags_label');
     tagsContainer.appendChild(label);
 
-    if (!tagState || !tagState.tags) {
-      const noTagsMsg = document.createElement('span');
-      noTagsMsg.className = 'ttagger-no-tags';
-      noTagsMsg.textContent = t('content_no_tags_available');
-      tagsContainer.appendChild(noTagsMsg);
-      section.appendChild(tagsContainer);
-      return section;
-    }
-
     // Get all custom tags (sorted, excluding starred tag)
-    const sortedTags = Object.entries(tagState.tags)
+    const sortedTags = Object.entries(tagState?.tags || {})
       .filter(([id]) => id !== STARRED_TAG_ID)
       .sort((a, b) => (a[1].sortOrder || 0) - (b[1].sortOrder || 0));
 
@@ -815,23 +806,21 @@
       noTagsMsg.className = 'ttagger-no-tags';
       noTagsMsg.textContent = t('content_no_custom_tags');
       tagsContainer.appendChild(noTagsMsg);
-      section.appendChild(tagsContainer);
-      return section;
-    }
-
-    // Show only assigned tags as badges
-    const assignedTagsData = sortedTags.filter(([tagId]) => assignedTags.includes(tagId));
-
-    if (assignedTagsData.length > 0) {
-      assignedTagsData.forEach(([tagId, tag]) => {
-        const badge = createTagBadge(tagId, tag, true);
-        tagsContainer.appendChild(badge);
-      });
     } else {
-      const noTagsMsg = document.createElement('span');
-      noTagsMsg.className = 'ttagger-no-tags';
-      noTagsMsg.textContent = t('content_no_tags_assigned');
-      tagsContainer.appendChild(noTagsMsg);
+      // Show only assigned tags as badges
+      const assignedTagsData = sortedTags.filter(([tagId]) => assignedTags.includes(tagId));
+
+      if (assignedTagsData.length > 0) {
+        assignedTagsData.forEach(([tagId, tag]) => {
+          const badge = createTagBadge(tagId, tag, true);
+          tagsContainer.appendChild(badge);
+        });
+      } else {
+        const noTagsMsg = document.createElement('span');
+        noTagsMsg.className = 'ttagger-no-tags';
+        noTagsMsg.textContent = t('content_no_tags_assigned');
+        tagsContainer.appendChild(noTagsMsg);
+      }
     }
 
     // Create dropdown button with tag icon and arrow
@@ -888,9 +877,11 @@
     });
 
     // Add separator and "Create New Tag" button
-    const separator = document.createElement('div');
-    separator.className = 'ttagger-tags-dropdown-separator';
-    dropdownMenu.appendChild(separator);
+    if (sortedTags.length > 0) {
+      const separator = document.createElement('div');
+      separator.className = 'ttagger-tags-dropdown-separator';
+      dropdownMenu.appendChild(separator);
+    }
 
     const createTagBtn = document.createElement('button');
     createTagBtn.className = 'ttagger-tags-dropdown-item ttagger-tags-create-btn';
@@ -1055,7 +1046,7 @@
     if (noTagsMsg) noTagsMsg.remove();
 
     // Get sorted tags
-    const sortedTags = Object.entries(tagState.tags)
+    const sortedTags = Object.entries(tagState?.tags || {})
       .filter(([id]) => id !== STARRED_TAG_ID)
       .sort((a, b) => (a[1].sortOrder || 0) - (b[1].sortOrder || 0));
 

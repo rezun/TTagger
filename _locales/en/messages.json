@@ -1063,8 +1063,8 @@
     "description": "Message shown when no tags are available on twitch.tv pages."
   },
   "content_no_custom_tags": {
-    "message": "No custom tags yet. Create tags in the extension popup.",
-    "description": "Message prompting users to create tags in the extension."
+    "message": "No custom tags yet.",
+    "description": "Message shown when no custom tags exist on twitch.tv pages."
   },
   "content_manage_tags": {
     "message": "Manage tags",
