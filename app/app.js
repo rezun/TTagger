@@ -184,16 +184,49 @@ function updateSpinner(button, loading) {
   }
 }
 
-/**
- * Escape HTML special characters to prevent XSS
- * WARNING: Only use this for simple text content, not for complex HTML structures
- * @param {string} str - String to escape
- * @returns {string} Escaped string
- */
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = String(str || '');
-  return div.innerHTML;
+function setAttributes(element, attributes = {}) {
+  Object.entries(attributes).forEach(([name, value]) => {
+    if (value !== undefined && value !== null) {
+      element.setAttribute(name, String(value));
+    }
+  });
+  return element;
+}
+
+function createElement(tagName, { className = '', textContent = '', attributes = {}, props = {} } = {}, children = []) {
+  const element = document.createElement(tagName);
+  if (className) {
+    element.className = className;
+  }
+  if (textContent) {
+    element.textContent = textContent;
+  }
+  Object.assign(element, props);
+  setAttributes(element, attributes);
+  children.forEach((child) => element.appendChild(child));
+  return element;
+}
+
+function appendModalStructure(modal, title, bodyChildren, footerChildren) {
+  const titleEl = createElement('h5', {
+    className: 'modal-title',
+    textContent: title,
+    attributes: { id: 'modalTitle' },
+  });
+  const closeButton = createElement('button', {
+    className: 'btn-close',
+    attributes: {
+      type: 'button',
+      'data-dismiss': 'modal',
+      'aria-label': t('common_close'),
+    },
+  });
+  const header = createElement('div', { className: 'modal-header' }, [titleEl, closeButton]);
+  const body = createElement('div', { className: 'modal-body' }, bodyChildren);
+  const footer = createElement('div', { className: 'modal-footer' }, footerChildren);
+  const content = createElement('div', { className: 'modal-content' }, [header, body, footer]);
+  const dialog = createElement('div', { className: 'modal-dialog modal-dialog-centered' }, [content]);
+  modal.appendChild(dialog);
 }
 
 /**
@@ -223,27 +256,33 @@ function showInputModal(title, placeholder = '', initialValue = '') {
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', 'modalTitle');
-    // Safe: All user-controlled parameters are HTML-escaped to prevent XSS
-    const closeLabel = escapeHtml(t('common_close'));
-    const cancelText = escapeHtml(t('common_cancel'));
-    const okText = escapeHtml(t('common_ok'));
-    modal.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalTitle">${escapeHtml(title)}</h5>
-            <button type="button" class="btn-close" data-dismiss="modal" aria-label="${closeLabel}"></button>
-          </div>
-          <div class="modal-body">
-            <input type="text" class="form-control" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(initialValue)}" maxlength="50" aria-label="${escapeHtml(placeholder)}">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">${cancelText}</button>
-            <button type="button" class="btn btn-primary" data-submit="modal">${okText}</button>
-          </div>
-        </div>
-      </div>
-    `;
+    const inputElement = createElement('input', {
+      className: 'form-control',
+      attributes: {
+        type: 'text',
+        placeholder,
+        value: initialValue,
+        maxlength: '50',
+        'aria-label': placeholder,
+      },
+    });
+    appendModalStructure(
+      modal,
+      title,
+      [inputElement],
+      [
+        createElement('button', {
+          className: 'btn btn-secondary',
+          textContent: t('common_cancel'),
+          attributes: { type: 'button', 'data-dismiss': 'modal' },
+        }),
+        createElement('button', {
+          className: 'btn btn-primary',
+          textContent: t('common_ok'),
+          attributes: { type: 'button', 'data-submit': 'modal' },
+        }),
+      ],
+    );
     document.body.appendChild(modal);
 
     const input = modal.querySelector('input');
@@ -336,29 +375,25 @@ function showConfirmModal(title, message, confirmText = 'OK', variant = 'danger'
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', 'modalTitle');
-    // Safe: All user-controlled parameters are HTML-escaped to prevent XSS
     // Variant is whitelisted to only allow valid Bootstrap button classes
     const safeVariant = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'].includes(variant) ? variant : 'danger';
-    const closeLabel = escapeHtml(t('common_close'));
-    const cancelText = escapeHtml(t('common_cancel'));
-    const confirmSafeText = escapeHtml(confirmText || t('common_ok'));
-    modal.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalTitle">${escapeHtml(title)}</h5>
-            <button type="button" class="btn-close" data-dismiss="modal" aria-label="${closeLabel}"></button>
-          </div>
-          <div class="modal-body">
-            <p class="mb-0">${escapeHtml(message)}</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">${cancelText}</button>
-            <button type="button" class="btn btn-${safeVariant}" data-submit="modal">${confirmSafeText}</button>
-          </div>
-        </div>
-      </div>
-    `;
+    appendModalStructure(
+      modal,
+      title,
+      [createElement('p', { className: 'mb-0', textContent: message })],
+      [
+        createElement('button', {
+          className: 'btn btn-secondary',
+          textContent: t('common_cancel'),
+          attributes: { type: 'button', 'data-dismiss': 'modal' },
+        }),
+        createElement('button', {
+          className: `btn btn-${safeVariant}`,
+          textContent: confirmText || t('common_ok'),
+          attributes: { type: 'button', 'data-submit': 'modal' },
+        }),
+      ],
+    );
     document.body.appendChild(modal);
 
     const cancelButtons = modal.querySelectorAll('[data-dismiss="modal"]');
@@ -432,46 +467,55 @@ function showColorPickerModal({ title, initialColor, defaultColors = [] }) {
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', 'modalTitle');
 
-    const closeLabel = escapeHtml(t('common_close'));
-    const cancelText = escapeHtml(t('common_cancel'));
-    const okText = escapeHtml(t('common_ok'));
-    const customColorLabel = escapeHtml(t('app_modal_color_custom_label'));
-    const customColorHint = escapeHtml(t('app_modal_color_custom_hint'));
-    const defaultColorsLabel = escapeHtml(t('app_modal_color_default_label'));
-    const defaultColorsAria = escapeHtml(t('app_modal_color_default_aria'));
-    modal.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalTitle">${escapeHtml(title)}</h5>
-            <button type="button" class="btn-close" data-dismiss="modal" aria-label="${closeLabel}"></button>
-          </div>
-          <div class="modal-body">
-            <div class="tag-color-picker-body">
-              <label class="tag-color-picker-label" for="tagColorPickerInput">${customColorLabel}</label>
-              <input
-                type="color"
-                class="tag-color-picker-input"
-                id="tagColorPickerInput"
-                value="${escapeHtml(startingColor)}"
-                aria-describedby="tagColorPickerHint"
-              >
-              <div class="tag-color-picker-hint text-muted small" id="tagColorPickerHint">
-                ${customColorHint}
-              </div>
-            </div>
-            <div class="tag-color-defaults">
-              <span class="tag-color-defaults-label">${defaultColorsLabel}</span>
-              <div class="tag-color-defaults-grid" role="listbox" aria-label="${defaultColorsAria}"></div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">${cancelText}</button>
-            <button type="button" class="btn btn-primary" data-submit="modal">${okText}</button>
-          </div>
-        </div>
-      </div>
-    `;
+    const colorInputElement = createElement('input', {
+      className: 'tag-color-picker-input',
+      attributes: {
+        type: 'color',
+        id: 'tagColorPickerInput',
+        value: startingColor,
+        'aria-describedby': 'tagColorPickerHint',
+      },
+    });
+    const colorPickerBody = createElement('div', { className: 'tag-color-picker-body' }, [
+      createElement('label', {
+        className: 'tag-color-picker-label',
+        textContent: t('app_modal_color_custom_label'),
+        attributes: { for: 'tagColorPickerInput' },
+      }),
+      colorInputElement,
+      createElement('div', {
+        className: 'tag-color-picker-hint text-muted small',
+        textContent: t('app_modal_color_custom_hint'),
+        attributes: { id: 'tagColorPickerHint' },
+      }),
+    ]);
+    const defaultsSectionElement = createElement('div', { className: 'tag-color-defaults' }, [
+      createElement('span', {
+        className: 'tag-color-defaults-label',
+        textContent: t('app_modal_color_default_label'),
+      }),
+      createElement('div', {
+        className: 'tag-color-defaults-grid',
+        attributes: { role: 'listbox', 'aria-label': t('app_modal_color_default_aria') },
+      }),
+    ]);
+    appendModalStructure(
+      modal,
+      title,
+      [colorPickerBody, defaultsSectionElement],
+      [
+        createElement('button', {
+          className: 'btn btn-secondary',
+          textContent: t('common_cancel'),
+          attributes: { type: 'button', 'data-dismiss': 'modal' },
+        }),
+        createElement('button', {
+          className: 'btn btn-primary',
+          textContent: t('common_ok'),
+          attributes: { type: 'button', 'data-submit': 'modal' },
+        }),
+      ],
+    );
 
     document.body.appendChild(modal);
 

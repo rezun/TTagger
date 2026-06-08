@@ -24,12 +24,6 @@ localize();
 
 const t = (key, substitutions) => getMessageStrict(key, substitutions);
 
-const escapeHtml = (value) => {
-  const div = document.createElement('div');
-  div.textContent = String(value ?? '');
-  return div.innerHTML;
-};
-
 const exportButton = document.getElementById('export-button');
 const importInput = document.getElementById('import-input');
 const signoutButton = document.getElementById('signout-button');
@@ -71,6 +65,33 @@ function showStatus(message, variant = 'success') {
 
 function hideStatus() {
   statusEl.classList.add('d-none');
+}
+
+function createLogCell(content, className = '') {
+  const cell = document.createElement('td');
+  if (className) {
+    cell.className = className;
+  }
+  if (content instanceof Node) {
+    cell.appendChild(content);
+  } else {
+    cell.textContent = String(content ?? '');
+  }
+  return cell;
+}
+
+function createSmallText(text) {
+  const small = document.createElement('small');
+  small.textContent = String(text ?? '');
+  return small;
+}
+
+function createLogMessageRow(message, className) {
+  const row = document.createElement('tr');
+  const cell = createLogCell(message, `text-center ${className}`);
+  cell.colSpan = 7;
+  row.appendChild(cell);
+  return row;
 }
 
 function normalizeNotificationCutoff(value) {
@@ -581,19 +602,18 @@ async function loadUpdateLog() {
     const logs = data.logs || [];
 
     if (!logs.length) {
-      const emptyMessage = escapeHtml(t('options_log_empty'));
-      logEntriesEl.innerHTML = `<tr><td colspan="7" class="text-center text-muted">${emptyMessage}</td></tr>`;
+      logEntriesEl.replaceChildren(createLogMessageRow(t('options_log_empty'), 'text-muted'));
       return;
     }
 
-    const skippedLabel = escapeHtml(t('options_log_status_skipped'));
-    const successLabel = escapeHtml(t('options_log_status_success'));
-    const failedLabel = escapeHtml(t('options_log_status_failed'));
+    const skippedLabel = t('options_log_status_skipped');
+    const successLabel = t('options_log_status_success');
+    const failedLabel = t('options_log_status_failed');
     const unknownError = t('options_log_unknown_error');
 
-    logEntriesEl.innerHTML = logs.reverse().map((entry) => {
+    const rows = logs.reverse().map((entry) => {
       const date = new Date(entry.timestamp);
-      const timeStr = escapeHtml(date.toLocaleString());
+      const timeStr = date.toLocaleString();
       const triggerBadge = getTriggerBadge(entry.trigger);
 
       let statusBadge;
@@ -603,39 +623,39 @@ async function loadUpdateLog() {
           : entry.skipped === 'no_cache'
             ? t('options_log_skip_no_cache')
             : entry.skipped;
-        const skipReason = escapeHtml(skipReasonValue);
-        const skipTitle = escapeHtml(
-          t('options_log_skipped_title', [skipReasonValue]),
-        );
-        statusBadge = `<span class="badge bg-secondary" title="${skipTitle}">${skippedLabel}</span>`;
+        statusBadge = createStatusBadge('bg-secondary', skippedLabel, t('options_log_skipped_title', [skipReasonValue]));
       } else if (entry.success) {
-        statusBadge = `<span class="badge bg-success">${successLabel}</span>`;
+        statusBadge = createStatusBadge('bg-success', successLabel);
       } else {
         const errorTextValue = entry.error || unknownError;
-        const errorText = escapeHtml(errorTextValue);
-        const failedTitle = escapeHtml(
-          t('options_log_failed_title', errorTextValue, [errorTextValue]),
-        );
-        statusBadge = `<span class="badge bg-danger" title="${failedTitle}">${failedLabel}</span>`;
+        statusBadge = createStatusBadge('bg-danger', failedLabel, t('options_log_failed_title', [errorTextValue]));
       }
 
-      return `
-        <tr>
-          <td><small>${timeStr}</small></td>
-          <td>${triggerBadge}</td>
-          <td>${entry.liveCount || 0}</td>
-          <td>${entry.trackedCount ?? entry.starredCount ?? 0}</td>
-          <td><small>${formatDuration(entry.cacheAge)}</small></td>
-          <td><small>${formatDuration(entry.duration)}</small></td>
-          <td>${statusBadge}</td>
-        </tr>
-      `;
-    }).join('');
+      const row = document.createElement('tr');
+      row.appendChild(createLogCell(createSmallText(timeStr)));
+      row.appendChild(createLogCell(triggerBadge));
+      row.appendChild(createLogCell(entry.liveCount || 0));
+      row.appendChild(createLogCell(entry.trackedCount ?? entry.starredCount ?? 0));
+      row.appendChild(createLogCell(createSmallText(formatDuration(entry.cacheAge))));
+      row.appendChild(createLogCell(createSmallText(formatDuration(entry.duration))));
+      row.appendChild(createLogCell(statusBadge));
+      return row;
+    });
+    logEntriesEl.replaceChildren(...rows);
   } catch (error) {
     console.error('Failed to load update log:', error);
-    const errorMessage = escapeHtml(t('options_log_load_error'));
-    logEntriesEl.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${errorMessage}</td></tr>`;
+    logEntriesEl.replaceChildren(createLogMessageRow(t('options_log_load_error'), 'text-danger'));
   }
+}
+
+function createStatusBadge(className, text, title = '') {
+  const badge = document.createElement('span');
+  badge.className = `badge ${className}`;
+  badge.textContent = text;
+  if (title) {
+    badge.title = title;
+  }
+  return badge;
 }
 
 function getTriggerBadge(trigger) {
@@ -653,7 +673,7 @@ function getTriggerBadge(trigger) {
   };
   const label = labels[trigger] || t('options_log_trigger_unknown');
   const badgeClass = classes[trigger] || 'bg-secondary';
-  return `<span class="badge ${badgeClass}">${escapeHtml(label)}</span>`;
+  return createStatusBadge(badgeClass, label);
 }
 
 function formatDuration(ms) {

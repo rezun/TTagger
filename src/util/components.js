@@ -14,6 +14,39 @@ import { getMessageStrict } from './i18n.js';
 const STAR_SVG_PATH = 'M47.755 3.765l11.525 23.353c0.448 0.907 1.313 1.535 2.314 1.681l25.772 3.745c2.52 0.366 3.527 3.463 1.703 5.241L70.42 55.962c-0.724 0.706-1.055 1.723-0.884 2.72l4.402 25.667c0.431 2.51-2.204 4.424-4.458 3.239L46.43 75.47c-0.895-0.471-1.965-0.471-2.86 0L20.519 87.588c-2.254 1.185-4.889-0.729-4.458-3.239l4.402-25.667c0.171-0.997-0.16-2.014-0.884-2.72L0.931 37.784c-1.824-1.778-0.817-4.875 1.703-5.241l25.772-3.745c1.001-0.145 1.866-0.774 2.314-1.681L42.245 3.765c1.127-2.284 4.383-2.284 5.51 0z';
 
 const t = (key, substitutions) => getMessageStrict(key, substitutions);
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function createSvgIcon(width, height, viewBox, pathData) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  svg.setAttribute('viewBox', viewBox);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', pathData);
+  path.setAttribute('fill', 'currentColor');
+  svg.appendChild(path);
+
+  return svg;
+}
+
+function createSvgUseIcon(className, width, height, href) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', className);
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  svg.setAttribute('fill', 'currentColor');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+
+  const use = document.createElementNS(SVG_NS, 'use');
+  use.setAttribute('href', href);
+  svg.appendChild(use);
+
+  return svg;
+}
 
 export function createStreamerCard(streamer, state, handlers) {
   const card = document.createElement('div');
@@ -256,11 +289,7 @@ function createFavoriteButton(streamer, state, handlers) {
   const addToStarredLabel = t('content_add_to_starred');
   const removeFromStarredLabel = t('content_remove_from_starred');
   favoriteButton.setAttribute('aria-label', addToStarredLabel);
-  favoriteButton.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 90 90" aria-hidden="true" focusable="false">
-      <path d="${STAR_SVG_PATH}" fill="currentColor"></path>
-    </svg>
-  `;
+  favoriteButton.appendChild(createSvgIcon('18', '18', '0 0 90 90', STAR_SVG_PATH));
   
   const isFavorite = getAssignmentsFor(streamer.id, state).includes(TAG_STARRED);
   favoriteButton.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
@@ -332,11 +361,7 @@ function createManageButton() {
   const manageLabel = t('content_manage_tags');
   manageButton.setAttribute('aria-label', manageLabel);
   manageButton.title = manageLabel;
-  manageButton.innerHTML = `
-    <svg class="icon-tag" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false">
-      <use href="../assets/icons/tag.svg#icon"/>
-    </svg>
-  `;
+  manageButton.appendChild(createSvgUseIcon('icon-tag', '16', '16', '../assets/icons/tag.svg#icon'));
   manageButton.addEventListener('click', (event) => {
     event.stopPropagation();
   });

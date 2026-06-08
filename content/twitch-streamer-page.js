@@ -13,6 +13,7 @@
 
   let getMessage;
   let setLanguageOverride;
+  const SVG_NS = 'http://www.w3.org/2000/svg';
 
   const i18nModulePromise = import(chrome.runtime.getURL('src/util/i18n.js')).then((mod) => {
     ({ getMessage, setLanguageOverride } = mod);
@@ -44,6 +45,25 @@
     }
     return formatFallbackMessage(key, substitutions);
   };
+
+  function createSvgIcon(width, height, viewBox, pathData, transform = '') {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+    svg.setAttribute('viewBox', viewBox);
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('fill', 'currentColor');
+    path.setAttribute('d', pathData);
+    if (transform) {
+      path.setAttribute('transform', transform);
+    }
+    svg.appendChild(path);
+
+    return svg;
+  }
 
   // Constants
   const STARRED_TAG_ID = 'favorite';
@@ -540,21 +560,23 @@
     }
     button.dataset.ttaggerStarred = starred ? 'true' : 'false';
 
-    button.innerHTML = `
-      <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
-        <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">
-          <div class="Layout-sc-1xcs6mc-0 ceVcik">
-            <div class="InjectLayout-sc-1i43xsx-0 iDMNUO">
-              <div class="ScSvgWrapper-sc-wkgzod-0 dVDUDh tw-svg ttagger-star-icon">
-                <svg width="24" height="24" viewBox="0 0 90 90" aria-hidden="true" focusable="false">
-                  <path d="${STAR_SVG_PATH}" fill="currentColor"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    const labelWrapper = document.createElement('div');
+    labelWrapper.className = 'ScCoreButtonLabel-sc-s7h2b7-0 OyGFd';
+    const labelText = document.createElement('div');
+    labelText.dataset.aTarget = 'tw-core-button-label-text';
+    labelText.className = 'Layout-sc-1xcs6mc-0 iBachR';
+    const layout = document.createElement('div');
+    layout.className = 'Layout-sc-1xcs6mc-0 ceVcik';
+    const injectLayout = document.createElement('div');
+    injectLayout.className = 'InjectLayout-sc-1i43xsx-0 iDMNUO';
+    const iconWrapper = document.createElement('div');
+    iconWrapper.className = 'ScSvgWrapper-sc-wkgzod-0 dVDUDh tw-svg ttagger-star-icon';
+    iconWrapper.appendChild(createSvgIcon('24', '24', '0 0 90 90', STAR_SVG_PATH));
+    injectLayout.appendChild(iconWrapper);
+    layout.appendChild(injectLayout);
+    labelText.appendChild(layout);
+    labelWrapper.appendChild(labelText);
+    button.appendChild(labelWrapper);
 
     button.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -826,14 +848,10 @@
     // Create dropdown button with tag icon and arrow
     const dropdownBtn = document.createElement('button');
     dropdownBtn.className = 'ttagger-tags-dropdown-btn';
-    dropdownBtn.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path fill="currentColor" d="${TAG_SVG_PATH}" transform="matrix(0.02787037 0 0 0.02787037 0.6355336 0.5)"></path>
-    </svg>
-    <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path fill="currentColor" d="M4 6l4 4 4-4H4z"/>
-    </svg>
-  `;
+    dropdownBtn.append(
+      createSvgIcon('16', '16', '0 0 16 16', TAG_SVG_PATH, 'matrix(0.02787037 0 0 0.02787037 0.6355336 0.5)'),
+      createSvgIcon('12', '12', '0 0 16 16', 'M4 6l4 4 4-4H4z'),
+    );
     const manageTagsLabel = t('content_manage_tags');
     dropdownBtn.setAttribute('title', manageTagsLabel);
     dropdownBtn.setAttribute('aria-label', manageTagsLabel);
@@ -885,12 +903,17 @@
 
     const createTagBtn = document.createElement('button');
     createTagBtn.className = 'ttagger-tags-dropdown-item ttagger-tags-create-btn';
-    createTagBtn.innerHTML = `
-    <span class="ttagger-tags-dropdown-checkbox">+</span>
-    <span class="ttagger-tags-dropdown-color" style="background-color: transparent; border: 1px dashed rgba(255, 255, 255, 0.3);"></span>
-    <span class="ttagger-tags-dropdown-name"></span>
-  `;
-    createTagBtn.querySelector('.ttagger-tags-dropdown-name').textContent = t('content_create_new_tag');
+    const createTagCheckbox = document.createElement('span');
+    createTagCheckbox.className = 'ttagger-tags-dropdown-checkbox';
+    createTagCheckbox.textContent = '+';
+    const createTagColor = document.createElement('span');
+    createTagColor.className = 'ttagger-tags-dropdown-color';
+    createTagColor.style.backgroundColor = 'transparent';
+    createTagColor.style.border = '1px dashed rgba(255, 255, 255, 0.3)';
+    const createTagName = document.createElement('span');
+    createTagName.className = 'ttagger-tags-dropdown-name';
+    createTagName.textContent = t('content_create_new_tag');
+    createTagBtn.append(createTagCheckbox, createTagColor, createTagName);
 
     createTagBtn.addEventListener('click', (e) => {
       e.preventDefault();
