@@ -159,13 +159,29 @@
     "message": "New Tag",
     "description": "Title for the create tag modal dialog."
   },
+  "app_modal_edit_tag_title": {
+    "message": "Edit Tag",
+    "description": "Title for the edit tag modal dialog."
+  },
   "app_modal_rename_tag_title": {
     "message": "Rename Tag",
     "description": "Title for the rename tag modal dialog."
   },
+  "app_modal_tag_name_label": {
+    "message": "Tag name",
+    "description": "Label for tag name inputs."
+  },
   "app_modal_tag_name_placeholder": {
     "message": "Tag name",
     "description": "Placeholder text for tag name inputs."
+  },
+  "app_modal_tag_abbreviation_label": {
+    "message": "Abbreviation",
+    "description": "Label for tag abbreviation inputs."
+  },
+  "app_modal_tag_abbreviation_hint": {
+    "message": "Use 1-3 letters, numbers, or symbols like #, +, &, and -.",
+    "description": "Help text for tag abbreviation inputs."
   },
   "app_modal_color_picker_title_named": {
     "message": "Pick color for \"$TAG$\"",
@@ -222,9 +238,17 @@
     "message": "Delete",
     "description": "Confirmation button label for deleting a tag."
   },
+  "app_tag_action_edit": {
+    "message": "Edit tag",
+    "description": "Menu item label for editing a tag."
+  },
   "app_error_rename_tag": {
     "message": "Failed to rename tag.",
     "description": "Error shown when a tag rename fails."
+  },
+  "app_error_edit_tag": {
+    "message": "Failed to edit tag.",
+    "description": "Error shown when editing a tag fails."
   },
   "app_error_update_tag_color": {
     "message": "Failed to update tag color.",

@@ -1,4 +1,8 @@
-import { resolveTagColor } from '../util/formatters.js';
+import {
+  getContrastingTextColor,
+  getTagAbbreviationText,
+  resolveTagColor,
+} from '../util/formatters.js';
 import { createStreamerCard } from '../util/components.js';
 import {
   TAG_STARRED,
@@ -319,6 +323,7 @@ function buildTagListEntries(selectedTagId, tags, usage, liveCounts) {
       entries.push({
         id: tag.id,
         label: tag.name,
+        abbreviation: tag.abbreviation,
         count: usage[tag.id] || 0,
         liveCount: liveCounts.tags[String(tag.id)] || 0,
         color: tag.color,
@@ -361,11 +366,8 @@ function createTagListItem(entry, actions, tagRecord, options = {}) {
     item.draggable = false;
   }
 
-  if (entry.id && entry.id !== TAG_STARRED && entry.color) {
-    const swatch = document.createElement('span');
-    swatch.className = 'tag-color-swatch';
-    swatch.style.backgroundColor = resolveTagColor(entry.color, DEFAULT_TAG_COLOR);
-    labelWrapper.appendChild(swatch);
+  if (isCustomTag) {
+    labelWrapper.appendChild(createTagAbbreviationBadge(tagRecord || entry));
   }
 
   const labelText = document.createElement('span');
@@ -430,6 +432,20 @@ function createCountBadge(total, live) {
   return badge;
 }
 
+function createTagAbbreviationBadge(tag) {
+  const badge = document.createElement('span');
+  badge.className = 'tag-abbreviation-badge';
+  const backgroundColor = resolveTagColor(tag?.color, DEFAULT_TAG_COLOR);
+  badge.style.backgroundColor = backgroundColor;
+  badge.style.borderColor = backgroundColor;
+  badge.style.color = getContrastingTextColor(backgroundColor);
+  badge.textContent = getTagAbbreviationText(tag);
+  if (tag?.name) {
+    badge.title = tag.name;
+  }
+  return badge;
+}
+
 function createTagActionMenu(entry, actions, tagRecord) {
   const wrapper = document.createElement('div');
   wrapper.className = 'dropdown';
@@ -468,9 +484,9 @@ function createTagActionMenu(entry, actions, tagRecord) {
       menu.appendChild(createDividerItem());
     }
 
-    menu.appendChild(createMenuItem('Rename', () => {
+    menu.appendChild(createMenuItem(t('app_tag_action_edit'), () => {
       hideDropdown(toggle);
-      actions.onRenameTag(entry.id, tagRecord?.name);
+      actions.onEditTag(entry.id, tagRecord);
     }));
 
     menu.appendChild(createMenuItem('Change color', () => {

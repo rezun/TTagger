@@ -3,6 +3,9 @@ import {
   formatUptime,
   formatViewerCount,
   appendMetaSegment,
+  getContrastingTextColor,
+  getTagAbbreviationText,
+  resolveTagColor,
 } from '../src/util/formatters.js';
 import { TAG_STARRED } from '../src/util/constants.js';
 import { handleUserError } from '../src/util/errors.js';
@@ -55,6 +58,20 @@ let openInCurrentTab = 'never'; // 'never', 'always', or 'smart'
 let currentTagState = null;
 let currentFollows = [];
 let selectedTagId = TAG_STARRED;
+
+function createLabelBadge(tag) {
+  const badge = document.createElement('span');
+  badge.className = 'label-badge';
+  const backgroundColor = resolveTagColor(tag?.color);
+  badge.style.backgroundColor = backgroundColor;
+  badge.style.borderColor = backgroundColor;
+  badge.style.color = getContrastingTextColor(backgroundColor);
+  badge.textContent = getTagAbbreviationText(tag);
+  if (tag?.name) {
+    badge.title = tag.name;
+  }
+  return badge;
+}
 
 
 
@@ -157,16 +174,9 @@ function populateLabelFilter(tagState) {
     button.type = 'button';
     button.dataset.tagId = tag.id;
 
-    // Create the label content with colored dot and count
-    // Skip the dot for Starred tag since it has a star icon
+    // Create the label content with badge and count.
     if (tag.id !== TAG_STARRED) {
-      const dot = document.createElement('span');
-      dot.className = 'label-dot';
-      dot.textContent = '●';
-      if (tag.color) {
-        dot.style.color = tag.color;
-      }
-      button.appendChild(dot);
+      button.appendChild(createLabelBadge(tag));
     }
 
     const name = document.createElement('span');
@@ -207,15 +217,9 @@ function updateLabelFilterButton() {
 
   labelFilterText.innerHTML = '';
 
-  // Skip the dot for Starred tag since it has a star icon
+  // Skip the badge for Starred tag since it has a star icon.
   if (selectedTag.id !== TAG_STARRED) {
-    const dot = document.createElement('span');
-    dot.className = 'label-dot';
-    dot.textContent = '●';
-    if (selectedTag.color) {
-      dot.style.color = selectedTag.color;
-    }
-    labelFilterText.appendChild(dot);
+    labelFilterText.appendChild(createLabelBadge(selectedTag));
   }
 
   const name = document.createElement('span');

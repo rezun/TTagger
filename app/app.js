@@ -6,7 +6,11 @@ import {
   extension,
 } from '../src/util/extension.js';
 import { handleUserError } from '../src/util/errors.js';
-import { resolveTagColor } from '../src/util/formatters.js';
+import {
+  getContrastingTextColor,
+  getTagAbbreviationText,
+  resolveTagColor,
+} from '../src/util/formatters.js';
 import { DASHBOARD_REFRESH_INTERVAL_MS } from '../src/config.js';
 import { localize, getMessageStrict, setLanguageOverride } from '../src/util/i18n.js';
 import {
@@ -40,6 +44,7 @@ import {
 import { sortTagsByOrder } from '../src/util/sorting.js';
 import { getPreferences } from '../src/storage/index.js';
 import { normalizeNotificationTagIds } from '../src/util/notificationTags.js';
+import { generateTagAbbreviation } from '../src/util/validators.js';
 
 const localizationReady = (async () => {
   try {
@@ -397,6 +402,185 @@ function showInputModal(title, placeholder = '', initialValue = '') {
   });
 }
 
+function showTagEditorModal({
+  title,
+  initialName = '',
+  initialAbbreviation = '',
+  initialColor = DEFAULT_TAG_COLOR,
+  existingAbbreviations = [],
+} = {}) {
+  return new Promise((resolve) => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade';
+    document.body.appendChild(backdrop);
+    setTimeout(() => backdrop.classList.add('show'), 10);
+
+    const modal = document.createElement('div');
+    modal.className = 'modal fade tag-edit-modal';
+    modal.tabIndex = -1;
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'modalTitle');
+
+    const nameInput = createElement('input', {
+      className: 'form-control',
+      attributes: {
+        type: 'text',
+        id: 'tagEditName',
+        value: initialName,
+        maxlength: '50',
+        autocomplete: 'off',
+      },
+    });
+    const abbreviationInput = createElement('input', {
+      className: 'form-control tag-abbreviation-input',
+      attributes: {
+        type: 'text',
+        id: 'tagEditAbbreviation',
+        value: initialAbbreviation,
+        maxlength: '3',
+        autocomplete: 'off',
+        'aria-describedby': 'tagEditAbbreviationHint',
+      },
+    });
+    const preview = createElement('span', { className: 'tag-edit-preview-badge' });
+
+    const body = createElement('div', { className: 'tag-edit-form' }, [
+      createElement('div', { className: 'mb-3' }, [
+        createElement('label', {
+          className: 'form-label',
+          textContent: t('app_modal_tag_name_label'),
+          attributes: { for: 'tagEditName' },
+        }),
+        nameInput,
+      ]),
+      createElement('div', { className: 'mb-0' }, [
+        createElement('label', {
+          className: 'form-label',
+          textContent: t('app_modal_tag_abbreviation_label'),
+          attributes: { for: 'tagEditAbbreviation' },
+        }),
+        createElement('div', { className: 'tag-edit-abbreviation-row' }, [
+          abbreviationInput,
+          preview,
+        ]),
+        createElement('div', {
+          className: 'form-text',
+          textContent: t('app_modal_tag_abbreviation_hint'),
+          attributes: { id: 'tagEditAbbreviationHint' },
+        }),
+      ]),
+    ]);
+
+    appendModalStructure(
+      modal,
+      title,
+      [body],
+      [
+        createElement('button', {
+          className: 'btn btn-secondary',
+          textContent: t('common_cancel'),
+          attributes: { type: 'button', 'data-dismiss': 'modal' },
+        }),
+        createElement('button', {
+          className: 'btn btn-primary',
+          textContent: t('common_ok'),
+          attributes: { type: 'button', 'data-submit': 'modal' },
+        }),
+      ],
+    );
+    document.body.appendChild(modal);
+
+    const cancelButtons = modal.querySelectorAll('[data-dismiss="modal"]');
+    const submitBtn = modal.querySelector('[data-submit="modal"]');
+    let abbreviationTouched = !!initialAbbreviation;
+
+    const updatePreview = () => {
+      const backgroundColor = resolveTagColor(initialColor, DEFAULT_TAG_COLOR);
+      const abbreviation = abbreviationInput.value.trim()
+        || generateTagAbbreviation(nameInput.value, existingAbbreviations);
+      preview.textContent = abbreviation;
+      preview.style.backgroundColor = backgroundColor;
+      preview.style.borderColor = backgroundColor;
+      preview.style.color = getContrastingTextColor(backgroundColor);
+    };
+
+    const cleanup = () => {
+      abortController.abort();
+      modal.classList.remove('show');
+      backdrop.classList.remove('show');
+      setTimeout(() => {
+        modal.remove();
+        backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+      }, 150);
+    };
+
+    const handleSubmit = () => {
+      const name = nameInput.value.trim();
+      const abbreviation = abbreviationInput.value.trim();
+      if (!name) {
+        nameInput.focus();
+        return;
+      }
+      if (!abbreviation) {
+        abbreviationInput.focus();
+        return;
+      }
+      cleanup();
+      resolve({ name, abbreviation });
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    nameInput.addEventListener('input', () => {
+      if (!abbreviationTouched) {
+        abbreviationInput.value = generateTagAbbreviation(nameInput.value, existingAbbreviations);
+      }
+      updatePreview();
+    }, { signal });
+    abbreviationInput.addEventListener('input', () => {
+      abbreviationTouched = true;
+      abbreviationInput.value = abbreviationInput.value.toLocaleUpperCase();
+      updatePreview();
+    }, { signal });
+    submitBtn.addEventListener('click', handleSubmit, { signal });
+    cancelButtons.forEach((btn) => btn.addEventListener('click', handleCancel, { signal }));
+    backdrop.addEventListener('click', handleCancel, { signal });
+    modal.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleCancel();
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSubmit();
+      }
+    }, { signal });
+
+    if (!abbreviationInput.value) {
+      abbreviationInput.value = generateTagAbbreviation(nameInput.value, existingAbbreviations);
+    }
+    updatePreview();
+
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      modal.classList.add('show');
+      modal.style.display = 'block';
+      nameInput.focus();
+      nameInput.select();
+    }, 10);
+  });
+}
+
 /**
  * Show a custom confirmation modal dialog
  * @param {string} title - Modal title (will be HTML-escaped)
@@ -683,22 +867,41 @@ function showColorPickerModal({ title, initialColor, defaultColors = [] }) {
   });
 }
 
-async function promptRenameTag(tagId, currentName) {
-  const nextName = await showInputModal(
-    t('app_modal_rename_tag_title'),
-    t('app_modal_tag_name_placeholder'),
-    currentName || '',
-  );
-  if (!nextName || nextName.trim() === currentName) return;
+async function promptEditTag(tagId, tagRecord = null) {
+  const currentName = tagRecord?.name || '';
+  const currentAbbreviation = getTagAbbreviationText(tagRecord || { name: currentName });
+  const result = await showTagEditorModal({
+    title: t('app_modal_edit_tag_title'),
+    initialName: currentName,
+    initialAbbreviation: currentAbbreviation,
+    initialColor: tagRecord?.color,
+    existingAbbreviations: getExistingTagAbbreviations(tagId),
+  });
+  if (!result) return;
+
+  const nextName = result.name.trim();
+  const nextAbbreviation = result.abbreviation.trim();
+  if (nextName === currentName && nextAbbreviation === currentAbbreviation) return;
 
   await withTagOperationLoading(async () => {
     try {
-      const data = await invoke('tag:update', { tagId, name: nextName });
+      const data = await invoke('tag:update', {
+        tagId,
+        name: nextName,
+        abbreviation: nextAbbreviation,
+      });
       applyTagStateUpdate(data.tagState);
     } catch (error) {
-      handleUserError(error, t('app_error_rename_tag'));
+      handleUserError(error, t('app_error_edit_tag'));
     }
   });
+}
+
+function getExistingTagAbbreviations(excludeTagId = null) {
+  return Object.values(state.tagState?.tags || {})
+    .filter((tag) => tag && String(tag.id) !== TAG_STARRED)
+    .filter((tag) => excludeTagId == null || String(tag.id) !== String(excludeTagId))
+    .map((tag) => getTagAbbreviationText(tag));
 }
 
 async function promptUpdateTagColor(tagId, currentColor) {
@@ -829,7 +1032,7 @@ function getRenderActions() {
   return {
     tagList: {
       onSelectTag: selectTag,
-      onRenameTag: promptRenameTag,
+      onEditTag: promptEditTag,
       onUpdateTagColor: promptUpdateTagColor,
       onDeleteTag: confirmDeleteTag,
       onToggleTagNotification: async (tagId, enabled) => {
@@ -1262,15 +1465,18 @@ function attachEventHandlers() {
   });
 
   elements.addTagButton.addEventListener('click', async () => {
-    const name = await showInputModal(
-      t('app_modal_new_tag_title'),
-      t('app_modal_tag_name_placeholder'),
-    );
-    if (!name || !name.trim()) return;
+    const result = await showTagEditorModal({
+      title: t('app_modal_new_tag_title'),
+      existingAbbreviations: getExistingTagAbbreviations(),
+    });
+    if (!result) return;
 
     await withTagOperationLoading(async () => {
       try {
-        const data = await invoke('tag:create', { name });
+        const data = await invoke('tag:create', {
+          name: result.name,
+          abbreviation: result.abbreviation,
+        });
         applyTagStateUpdate(data.tagState);
       } catch (error) {
         handleUserError(error, t('app_error_create_tag'));

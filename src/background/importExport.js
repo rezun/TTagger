@@ -1,10 +1,17 @@
 import { getTagState, setTagState } from '../storage/index.js';
 import { normalizeTagState, resetTagStateToDefault, pickTagColor, STARRED_TAG_ID } from './tagState.js';
-import { isValidTagName, sanitizeTagName, isValidHexColor } from '../util/validators.js';
+import {
+  isValidTagAbbreviation,
+  isValidTagName,
+  sanitizeTagAbbreviation,
+  sanitizeTagName,
+  isValidHexColor,
+} from '../util/validators.js';
 import { sortTagsByOrder } from '../util/sorting.js';
 
 function serializeTagForExport(tag) {
   const entry = { name: tag.name };
+  if (tag.abbreviation) entry.abbreviation = tag.abbreviation;
   if (tag.color) entry.color = tag.color;
   const order = Number(tag.sortOrder);
   if (Number.isFinite(order)) entry.sortOrder = order;
@@ -74,6 +81,13 @@ function normalizeImportedTags(rawTags = []) {
       if (!name || !isValidTagName(name)) return null;
 
       const entry = { name };
+
+      if (typeof tag.abbreviation === 'string' && tag.abbreviation.trim()) {
+        const abbreviation = sanitizeTagAbbreviation(tag.abbreviation);
+        if (isValidTagAbbreviation(abbreviation)) {
+          entry.abbreviation = abbreviation;
+        }
+      }
 
       // Validate and normalize color
       if (typeof tag.color === 'string' && tag.color.trim()) {
@@ -180,6 +194,13 @@ function validateImportPayload(payload) {
       if (tag.color && !isValidHexColor(tag.color)) {
         throw new Error(`Invalid import payload: tag at index ${i} has invalid color (must be valid hex color).`);
       }
+
+      if (tag.abbreviation) {
+        const abbreviation = sanitizeTagAbbreviation(tag.abbreviation);
+        if (!isValidTagAbbreviation(abbreviation)) {
+          throw new Error(`Invalid import payload: tag at index ${i} has invalid abbreviation (must be 1-3 letters, numbers, or badge-safe symbols).`);
+        }
+      }
     }
   }
 }
@@ -218,6 +239,7 @@ export async function handleImport(payload) {
     const entry = {
       id: newId,
       name: tag.name,
+      abbreviation: tag.abbreviation,
       color: tag.color || pickTagColor(newId),
       createdAt: tag.createdAt || new Date().toISOString(),
       sortOrder: index + 1,

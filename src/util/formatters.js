@@ -1,4 +1,9 @@
 import { getMessageStrict } from './i18n.js';
+import {
+  generateTagAbbreviation,
+  isValidTagAbbreviation,
+  sanitizeTagAbbreviation,
+} from './validators.js';
 
 export function formatUptime(startedAt, prefix = '') {
   if (!startedAt) return null;
@@ -132,4 +137,17 @@ export function getContrastingTextColor(color, { light = '#ffffff', dark = '#000
   // Relative luminance per WCAG definition (sRGB)
   const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   return luminance > threshold ? dark : light;
+}
+
+/**
+ * Resolve the display abbreviation for a tag.
+ * @param {object} tag
+ * @returns {string}
+ */
+export function getTagAbbreviationText(tag) {
+  const stored = sanitizeTagAbbreviation(tag?.abbreviation);
+  if (stored && isValidTagAbbreviation(stored)) {
+    return stored;
+  }
+  return generateTagAbbreviation(tag?.name || '');
 }

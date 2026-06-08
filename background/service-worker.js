@@ -139,13 +139,21 @@ const handlers = {
   },
 
   async 'tag:create'(message) {
-    const state = await upsertTag({ name: message.name, color: message.color });
+    const state = await upsertTag({
+      name: message.name,
+      abbreviation: message.abbreviation,
+      color: message.color,
+    });
     return { tagState: state };
   },
 
   async 'tag:create-and-assign'(message) {
     const result = await createAndAssignTag(
-      { name: message.name, color: message.color },
+      {
+        name: message.name,
+        abbreviation: message.abbreviation,
+        color: message.color,
+      },
       message.streamerId,
     );
     await syncLiveAssignments(result.tagState.assignments, { changedStreamerId: message.streamerId });
@@ -153,7 +161,11 @@ const handlers = {
   },
 
   async 'tag:update'(message) {
-    const state = await upsertTag({ name: message.name, color: message.color }, message.tagId);
+    const state = await upsertTag({
+      name: message.name,
+      abbreviation: message.abbreviation,
+      color: message.color,
+    }, message.tagId);
     return { tagState: state };
   },
 

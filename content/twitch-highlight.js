@@ -23,7 +23,7 @@ let starredUsernames = new Set(); // Lowercase usernames
 let processingTimeout = null;
 let highlightingEnabled = true; // Whether highlighting is enabled
 let sidebarTagsEnabled = true; // Whether tag badges are enabled
-let streamerTagMap = new Map(); // login (lowercase) -> Array<{ id, name, abbr }>
+let streamerTagMap = new Map(); // login (lowercase) -> Array<{ id, name, abbr, color }>
 
 function setDebugLogging(enabled) {
   LOG_DEBUG = !!enabled;
@@ -38,6 +38,25 @@ function debug(...args) {
 }
 
 /**
+ * Normalize compact badge text.
+ * @param {string} value
+ * @returns {string}
+ */
+function sanitizeTagAbbreviation(value) {
+  if (!value || typeof value !== 'string') {
+    return '';
+  }
+
+  const compact = value.replace(/<[^>]*>/g, '').replace(/\s+/g, '').trim().toLocaleUpperCase();
+  if (!compact) {
+    return '';
+  }
+
+  const shortened = Array.from(compact).slice(0, 3).join('');
+  return /^[\p{L}\p{N}+#&-]+$/u.test(shortened) ? shortened : '';
+}
+
+/**
  * Create a compact uppercase abbreviation for a tag name.
  * @param {string} name
  * @returns {string}
@@ -47,12 +66,16 @@ function abbreviateTagName(name) {
     return '';
   }
 
-  const compact = name.replace(/\s+/g, '').trim();
-  if (!compact) {
-    return '';
-  }
+  const words = name
+    .split(/[\s_-]+/)
+    .map((word) => word.replace(/[^\p{L}\p{N}+#&-]/gu, ''))
+    .filter(Boolean);
+  const compact = words.join('');
+  const source = words.length > 1
+    ? words.map((word) => Array.from(word)[0]).join('')
+    : compact;
 
-  return compact.slice(0, 2).toUpperCase();
+  return sanitizeTagAbbreviation(Array.from(source).slice(0, 2).join('') || compact);
 }
 
 /**
@@ -268,7 +291,8 @@ async function fetchStarredStreamers() {
           const customName = typeof tag.customName === 'string' ? tag.customName : '';
           const displayName = (tagName && tagName.trim()) || (customName && customName.trim());
           if (!displayName) continue;
-          const abbr = abbreviateTagName(displayName);
+          const storedAbbr = sanitizeTagAbbreviation(tag.abbreviation);
+          const abbr = storedAbbr || abbreviateTagName(displayName);
           if (!abbr) continue;
           const badgeColor = resolveTagColor(tag.color);
           const badgeId = tag.id || tagId;
@@ -413,7 +437,7 @@ function updateTagBadges(cardElement, username) {
     metadataContainer.appendChild(container);
   }
 
-  const badgeKey = badges.map(badge => `${badge.id}:${badge.abbr}:${badge.color}`).join(',');
+  const badgeKey = badges.map(badge => `${badge.id}:${badge.name}:${badge.abbr}:${badge.color}`).join(',');
   if (container.dataset.badgeKey === badgeKey) {
     return;
   }

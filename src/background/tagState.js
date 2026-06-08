@@ -1,7 +1,13 @@
 import { getTagState, setTagState } from '../storage/index.js';
 import { normalizeTagColor } from '../util/formatters.js';
 import { TAG_COLOR_POOL } from '../config.js';
-import { sanitizeTagName, isValidTagName } from '../util/validators.js';
+import {
+  generateTagAbbreviation,
+  isValidTagAbbreviation,
+  sanitizeTagAbbreviation,
+  sanitizeTagName,
+  isValidTagName,
+} from '../util/validators.js';
 import { compareTagsByOrderWithCreatedAt } from '../util/sorting.js';
 
 const STARRED_TAG_ID = 'favorite';
@@ -128,6 +134,53 @@ function addOrNormalizeStarredTag(state) {
   favorite.sortOrder = 0;
 }
 
+function getUsedTagAbbreviations(state, excludeTagId = null) {
+  const used = new Set();
+  Object.values(state.tags || {}).forEach((tag) => {
+    if (!tag || String(tag.id) === STARRED_TAG_ID) return;
+    if (excludeTagId != null && String(tag.id) === String(excludeTagId)) return;
+    const abbreviation = sanitizeTagAbbreviation(tag.abbreviation);
+    if (isValidTagAbbreviation(abbreviation)) {
+      used.add(abbreviation);
+    }
+  });
+  return used;
+}
+
+function resolveTagAbbreviation(state, tag, { excludeTagId = null, required = true } = {}) {
+  const used = getUsedTagAbbreviations(state, excludeTagId);
+  const sanitized = sanitizeTagAbbreviation(tag?.abbreviation);
+  if (sanitized && isValidTagAbbreviation(sanitized)) {
+    if (!used.has(sanitized)) {
+      return sanitized;
+    }
+    if (required) {
+      throw new Error('A tag with that abbreviation already exists.');
+    }
+  }
+
+  return generateTagAbbreviation(tag?.name || '', used);
+}
+
+function ensureTagAbbreviations(state) {
+  const used = new Set();
+  const tags = Object.values(state.tags || {}).sort(compareTagsByOrderWithCreatedAt);
+
+  tags.forEach((tag) => {
+    if (!tag || String(tag.id) === STARRED_TAG_ID) return;
+    const sanitized = sanitizeTagAbbreviation(tag.abbreviation);
+    if (sanitized && isValidTagAbbreviation(sanitized) && !used.has(sanitized)) {
+      tag.abbreviation = sanitized;
+      used.add(sanitized);
+      return;
+    }
+
+    const generated = generateTagAbbreviation(tag.name, used);
+    tag.abbreviation = generated;
+    used.add(generated);
+  });
+}
+
 /**
  * Remove assignments for tags that no longer exist to prevent crashes from corrupted storage.
  * @param {object} state - Normalized tag state
@@ -171,6 +224,7 @@ export function normalizeTagState(state) {
   addOrNormalizeStarredTag(normalized);
   ensureNextId(normalized);
   ensureSortOrder(normalized);
+  ensureTagAbbreviations(normalized);
   cleanOrphanedAssignments(normalized);
 
   return normalized;
@@ -207,14 +261,23 @@ export async function upsertTag(fields = {}, tagId) {
     const now = new Date().toISOString();
     const nameProvided = Object.prototype.hasOwnProperty.call(fields, 'name');
     const colorProvided = Object.prototype.hasOwnProperty.call(fields, 'color');
+    const abbreviationProvided = Object.prototype.hasOwnProperty.call(fields, 'abbreviation')
+      && fields.abbreviation !== undefined;
 
     // Sanitize tag name to remove HTML and enforce length limits
     const trimmedName = nameProvided && typeof fields.name === 'string' ? sanitizeTagName(fields.name) : '';
     const normalizedColor = colorProvided ? normalizeTagColor(fields.color, { strict: true }) : null;
+    const trimmedAbbreviation = abbreviationProvided
+      ? sanitizeTagAbbreviation(fields.abbreviation)
+      : '';
 
     // Validate sanitized name
     if (nameProvided && trimmedName && !isValidTagName(trimmedName)) {
       throw new Error('Tag name contains invalid characters or is too long.');
+    }
+
+    if (abbreviationProvided && (!trimmedAbbreviation || !isValidTagAbbreviation(trimmedAbbreviation))) {
+      throw new Error('Tag abbreviation must be 1-3 letters, numbers, or badge-safe symbols.');
     }
 
     if (targetId) {
@@ -248,9 +311,21 @@ export async function upsertTag(fields = {}, tagId) {
       }
 
       const nextColor = colorProvided ? normalizedColor || existing.color : existing.color;
+      const nextAbbreviation = abbreviationProvided
+        ? resolveTagAbbreviation(
+          state,
+          { ...existing, name: nextName, abbreviation: trimmedAbbreviation },
+          { excludeTagId: targetId },
+        )
+        : existing.abbreviation || resolveTagAbbreviation(
+          state,
+          { ...existing, name: nextName },
+          { excludeTagId: targetId, required: false },
+        );
       state.tags[targetId] = {
         ...existing,
         name: nextName,
+        abbreviation: nextAbbreviation,
         color: nextColor,
         updatedAt: now,
       };
@@ -277,9 +352,19 @@ export async function upsertTag(fields = {}, tagId) {
 
       const newId = String(state.nextId++);
       const color = colorProvided ? normalizedColor || pickTagColor(newId) : pickTagColor(newId);
+      const abbreviation = resolveTagAbbreviation(
+        state,
+        {
+          id: newId,
+          name: trimmedName,
+          abbreviation: abbreviationProvided ? trimmedAbbreviation : '',
+        },
+        { excludeTagId: newId },
+      );
       state.tags[newId] = {
         id: newId,
         name: trimmedName,
+        abbreviation,
         color,
         createdAt: now,
         sortOrder: getNextSortOrder(state),
@@ -308,8 +393,13 @@ export async function createAndAssignTag(fields = {}, streamerId) {
     const now = new Date().toISOString();
     const nameProvided = Object.prototype.hasOwnProperty.call(fields, 'name');
     const colorProvided = Object.prototype.hasOwnProperty.call(fields, 'color');
+    const abbreviationProvided = Object.prototype.hasOwnProperty.call(fields, 'abbreviation')
+      && fields.abbreviation !== undefined;
     const trimmedName = nameProvided && typeof fields.name === 'string' ? sanitizeTagName(fields.name) : '';
     const normalizedColor = colorProvided ? normalizeTagColor(fields.color, { strict: true }) : null;
+    const trimmedAbbreviation = abbreviationProvided
+      ? sanitizeTagAbbreviation(fields.abbreviation)
+      : '';
 
     if (!nameProvided || !trimmedName) {
       throw new Error('Tag name cannot be empty.');
@@ -317,6 +407,10 @@ export async function createAndAssignTag(fields = {}, streamerId) {
 
     if (!isValidTagName(trimmedName)) {
       throw new Error('Tag name contains invalid characters or is too long.');
+    }
+
+    if (abbreviationProvided && (!trimmedAbbreviation || !isValidTagAbbreviation(trimmedAbbreviation))) {
+      throw new Error('Tag abbreviation must be 1-3 letters, numbers, or badge-safe symbols.');
     }
 
     const normalizedName = trimmedName.toLowerCase();
@@ -337,9 +431,19 @@ export async function createAndAssignTag(fields = {}, streamerId) {
 
     const newId = String(state.nextId++);
     const color = colorProvided ? normalizedColor || pickTagColor(newId) : pickTagColor(newId);
+    const abbreviation = resolveTagAbbreviation(
+      state,
+      {
+        id: newId,
+        name: trimmedName,
+        abbreviation: abbreviationProvided ? trimmedAbbreviation : '',
+      },
+      { excludeTagId: newId },
+    );
     state.tags[newId] = {
       id: newId,
       name: trimmedName,
+      abbreviation,
       color,
       createdAt: now,
       sortOrder: getNextSortOrder(state),
