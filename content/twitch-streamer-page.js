@@ -510,6 +510,29 @@
   }
 
   /**
+   * Find the outer Twitch wrapper that owns the follow/unfollow button.
+   * Twitch nests the button several levels deep inside a compact control group;
+   * inserting next to the button itself makes our star behave like part of the
+   * same heart control. Return the group node so the star can be mounted as a
+   * separate sibling in the channel action row.
+   * @param {HTMLElement} followButton
+   * @returns {HTMLElement|null}
+   */
+  function findFollowButtonGroup(followButton) {
+    let current = followButton.parentElement;
+
+    while (current && current.parentElement) {
+      const parent = current.parentElement;
+      if (parent.children.length > 1) {
+        return current;
+      }
+      current = parent;
+    }
+
+    return followButton.parentElement;
+  }
+
+  /**
    * Create tag badge element
    * @param {string} tagId
    * @param {object} tag
@@ -1079,14 +1102,11 @@
     starContainer.className = 'ttagger-star-container';
     starContainer.appendChild(starButton);
 
-    const buttonMount =
-      unfollowButton.closest('[data-target="channel-header-right"]')
-      || unfollowButton.closest('[data-test-selector="follow-button"]')
-      || unfollowButton.parentElement;
+    const followButtonGroup = findFollowButtonGroup(unfollowButton);
 
-    if (buttonMount && buttonMount.parentElement) {
-      debug('Injecting star button before unfollow button');
-      unfollowButton.insertAdjacentElement('beforebegin', starContainer);
+    if (followButtonGroup && followButtonGroup.parentElement) {
+      debug('Injecting star button before follow button group');
+      followButtonGroup.parentElement.insertBefore(starContainer, followButtonGroup);
       starInjected = true;
     } else if (unfollowButton.parentElement) {
       debug('Fallback inject: inserting star button before unfollow button in parent');

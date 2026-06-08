@@ -1055,7 +1055,7 @@
     "description": "Message shown when a streamer has no tags assigned."
   },
   "content_no_tags_label": {
-    "message": "Your Tags:",
+    "message": "Your TTags:",
     "description": "Label preceding the tag badges on twitch.tv pages."
   },
   "content_no_tags_available": {
@@ -1095,12 +1095,12 @@
     "description": "Alert shown when creating a tag from twitch.tv pages fails."
   },
   "content_add_to_starred": {
-    "message": "Add to starred",
-    "description": "Label for adding a streamer to starred list."
+    "message": "TTagger: Add to starred",
+    "description": "Label for adding a streamer to the TTagger starred list."
   },
   "content_remove_from_starred": {
-    "message": "Remove from starred",
-    "description": "Label for removing a streamer from starred list."
+    "message": "TTagger: Remove from starred",
+    "description": "Label for removing a streamer from the TTagger starred list."
   },
   "app_tag_menu_label": {
     "message": "Assign tags",
