@@ -50,6 +50,7 @@
   const DEFAULT_TAG_COLOR = '#6f42c1';
   const DEBOUNCE_DELAY = 300;
   const CHECK_INTERVAL = 500; // Check for UI injection points
+  const FOLLOW_STATE_RECOVERY_COOLDOWN = 3000;
   let LOG_DEBUG = false;
   const STAR_SVG_PATH = 'M47.755 3.765l11.525 23.353c0.448 0.907 1.313 1.535 2.314 1.681l25.772 3.745c2.52 0.366 3.527 3.463 1.703 5.241L70.42 55.962c-0.724 0.706-1.055 1.723-0.884 2.72l4.402 25.667c0.431 2.51-2.204 4.424-4.458 3.239L46.43 75.47c-0.895-0.471-1.965-0.471-2.86 0L20.519 87.588c-2.254 1.185-4.889-0.729-4.458-3.239l4.402-25.667c0.171-0.997-0.16-2.014-0.884-2.72L0.931 37.784c-1.824-1.778-0.817-4.875 1.703-5.241l25.772-3.745c1.001-0.145 1.866-0.774 2.314-1.681L42.245 3.765c1.127-2.284 4.383-2.284 5.51 0z';
   const TAG_SVG_PATH = 'm483.24 0h-150.29c-27.556 0-66.04 15.94-85.52 35.424l-232.81 232.81c-19.483 19.483-19.483 51.37 0 70.85l179.64 179.64c19.483 19.484 51.37 19.484 70.849 0l232.81-232.81c19.483-19.484 35.424-57.969 35.424-85.52v-150.29c-.0001-27.554-22.544-50.1-50.1-50.1m-66.57 166.67c-27.614 0-50-22.385-50-50 0-27.614 22.386-50 50-50 27.614 0 50 22.386 50 50 0 27.614-22.386 50-50 50z';
@@ -71,6 +72,10 @@
   let urlChangeObserver = null;
   let storageListener = null;
   let isProcessingFollow = false;
+  let isRecoveringFollowState = false;
+  let lastFollowStateRecoveryAt = 0;
+  let followButtonClickListener = null;
+  let urlPopstateListener = null;
 
   function hasStarButton() {
     return !!document.querySelector('.ttagger-star-container');
@@ -78,6 +83,10 @@
 
   function hasTagsSection() {
     return !!document.querySelector('[data-ttagger-tags]');
+  }
+
+  function hasTwitchUnfollowButton() {
+    return !!document.querySelector('[data-a-target="unfollow-button"]');
   }
 
   /**
@@ -115,6 +124,60 @@
     uiInjected = false;
     injectUI();
     startInjectionCheck();
+  }
+
+  async function refreshFollowCacheFromBackground() {
+    const response = await chrome.runtime.sendMessage({ type: 'follow:refresh' });
+    if (!response?.ok) {
+      throw new Error(response?.error || 'Failed to refresh follow cache');
+    }
+
+    if (Array.isArray(response.data?.follows)) {
+      followCache = {
+        fetchedAt: response.data.fetchedAt || Date.now(),
+        items: response.data.follows,
+      };
+      return followCache;
+    }
+
+    return fetchFollowCache();
+  }
+
+  async function recoverFollowStateFromTwitchDom(reason = '') {
+    if (isFollowed || !currentStreamerUsername || isRecoveringFollowState) {
+      return false;
+    }
+
+    if (!hasTwitchUnfollowButton()) {
+      return false;
+    }
+
+    const now = Date.now();
+    if (now - lastFollowStateRecoveryAt < FOLLOW_STATE_RECOVERY_COOLDOWN) {
+      return false;
+    }
+
+    isRecoveringFollowState = true;
+    lastFollowStateRecoveryAt = now;
+
+    try {
+      debug('Twitch shows followed state while cache does not; refreshing follow cache', reason);
+      await refreshFollowCacheFromBackground();
+      isFollowed = checkFollowState();
+
+      if (isFollowed) {
+        debug('Follow state recovered from refreshed cache');
+        startInjectionCheck();
+        ensureUiPresence(reason || 'follow state recovery');
+      }
+
+      return isFollowed;
+    } catch (error) {
+      console.warn('[TTagger] Failed to recover follow state from Twitch page:', error);
+      return false;
+    } finally {
+      isRecoveringFollowState = false;
+    }
   }
 
   /**
@@ -249,13 +312,6 @@
       followButtonObserver.disconnect();
       followButtonObserver = null;
       debug('Disconnected follow button observer');
-    }
-
-    // Remove storage listener
-    if (storageListener) {
-      chrome.storage.onChanged.removeListener(storageListener);
-      storageListener = null;
-      debug('Removed storage listener');
     }
 
     debug('Per-streamer cleanup complete');
@@ -1299,8 +1355,12 @@
    * Set up listener on follow/unfollow buttons
    */
   function setupFollowButtonListener() {
+    if (followButtonClickListener) {
+      return;
+    }
+
     // Use event delegation on the body to catch follow/unfollow button clicks
-    const listener = async (e) => {
+    followButtonClickListener = async (e) => {
       const followTarget = e.target.closest('[data-a-target="follow-button"]');
       const modalUnfollowTarget = e.target.closest('[data-a-target="modal-unfollow-button"]');
 
@@ -1313,20 +1373,26 @@
       }
     };
 
-    // Track this listener for cleanup
-    trackEventListener(document, 'click', listener, true);
+    document.addEventListener('click', followButtonClickListener, true);
   }
 
   /**
    * Check and update follow state by observing the follow/unfollow button
    */
   function observeFollowButton() {
+    if (followButtonObserver) {
+      followButtonObserver.disconnect();
+      followButtonObserver = null;
+    }
+
     const observer = new MutationObserver(() => {
       const wasFollowed = isFollowed;
       isFollowed = checkFollowState();
 
       if (isFollowed) {
         ensureUiPresence('follow button mutation');
+      } else if (hasTwitchUnfollowButton()) {
+        void recoverFollowStateFromTwitchDom('follow button mutation');
       }
 
       if (wasFollowed !== isFollowed) {
@@ -1359,6 +1425,10 @@
    * Setup storage listener for real-time updates
    */
   function setupStorageListener() {
+    if (storageListener) {
+      return;
+    }
+
     // Define listener function so we can remove it later
     const listener = async (changes, areaName) => {
       if (areaName === 'sync') {
@@ -1470,6 +1540,10 @@
    * Observe URL changes
    */
   function observeUrlChanges() {
+    if (urlChangeObserver) {
+      return;
+    }
+
     // Watch for URL changes via history API
     let lastUrl = location.href;
 
@@ -1478,6 +1552,8 @@
       if (url !== lastUrl) {
         lastUrl = url;
         handleUrlChange();
+      } else if (!isFollowed && currentStreamerUsername && hasTwitchUnfollowButton()) {
+        void recoverFollowStateFromTwitchDom('document mutation');
       }
     });
 
@@ -1489,8 +1565,10 @@
     // Store observer reference for cleanup
     urlChangeObserver = observer;
 
-    // Also listen to popstate - track this listener
-    trackEventListener(window, 'popstate', handleUrlChange);
+    if (!urlPopstateListener) {
+      urlPopstateListener = handleUrlChange;
+      window.addEventListener('popstate', urlPopstateListener);
+    }
   }
 
   /**
@@ -1501,7 +1579,8 @@
     debug('Document ready state:', document.readyState);
     debug('Current URL:', window.location.href);
 
-    currentStreamerUsername = extractUsernameFromUrl();
+    const initializedUsername = extractUsernameFromUrl();
+    currentStreamerUsername = initializedUsername;
 
     if (!currentStreamerUsername) {
       debug('Not on a streamer page, exiting');
@@ -1514,12 +1593,23 @@
     await fetchFollowCache();
     await fetchTagState();
 
+    if (currentStreamerUsername !== initializedUsername) {
+      debug('Streamer changed during initialization, aborting stale initialization');
+      return;
+    }
+
     // Check if followed
     isFollowed = checkFollowState();
 
+    debug('Setting up follow button observer...');
+    observeFollowButton();
+
     if (!isFollowed) {
-      debug('Streamer not followed, UI will not be shown');
-      return;
+      const recovered = await recoverFollowStateFromTwitchDom('initialization');
+      if (!recovered) {
+        debug('Streamer not followed, UI will not be shown');
+        return;
+      }
     }
 
     debug('Streamer is followed, preparing to inject UI');
@@ -1528,10 +1618,6 @@
 
     // Start trying to inject UI
     startInjectionCheck();
-
-    // Set up observers
-    debug('Setting up follow button observer...');
-    observeFollowButton();
     debug('Initialization complete');
   }
 
@@ -1561,10 +1647,10 @@
   async function start() {
     await localizationReady;
     await loadDebugLoggingPreference();
-    await initialize();
     setupStorageListener();
     observeUrlChanges();
     setupFollowButtonListener();
+    await initialize();
   }
 
   // Start the script when DOM is ready
