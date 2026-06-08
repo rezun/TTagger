@@ -292,6 +292,68 @@ export async function upsertTag(fields = {}, tagId) {
 }
 
 /**
+ * Create a tag and assign it to a streamer in a single storage write.
+ * @param {object} [fields]
+ * @param {string|number} streamerId
+ * @returns {Promise<{tagState: {tags: object, assignments: object, nextId: number}, tagId: string}>}
+ */
+export async function createAndAssignTag(fields = {}, streamerId) {
+  return withConcurrencyControl(async () => {
+    const targetStreamerId = streamerId != null ? String(streamerId) : '';
+    if (!targetStreamerId) {
+      throw new Error('Streamer is required.');
+    }
+
+    const state = normalizeTagState(await getTagState());
+    const now = new Date().toISOString();
+    const nameProvided = Object.prototype.hasOwnProperty.call(fields, 'name');
+    const colorProvided = Object.prototype.hasOwnProperty.call(fields, 'color');
+    const trimmedName = nameProvided && typeof fields.name === 'string' ? sanitizeTagName(fields.name) : '';
+    const normalizedColor = colorProvided ? normalizeTagColor(fields.color, { strict: true }) : null;
+
+    if (!nameProvided || !trimmedName) {
+      throw new Error('Tag name cannot be empty.');
+    }
+
+    if (!isValidTagName(trimmedName)) {
+      throw new Error('Tag name contains invalid characters or is too long.');
+    }
+
+    const normalizedName = trimmedName.toLowerCase();
+    if (
+      normalizedName === STARRED_TAG_NAME_LOWER ||
+      normalizedName === 'favorite' ||
+      normalizedName === 'starred'
+    ) {
+      throw new Error('Starred tag already exists.');
+    }
+
+    const duplicate = Object.values(state.tags).find(
+      (tag) => tag.name.toLowerCase() === normalizedName,
+    );
+    if (duplicate) {
+      throw new Error('A tag with that name already exists.');
+    }
+
+    const newId = String(state.nextId++);
+    const color = colorProvided ? normalizedColor || pickTagColor(newId) : pickTagColor(newId);
+    state.tags[newId] = {
+      id: newId,
+      name: trimmedName,
+      color,
+      createdAt: now,
+      sortOrder: getNextSortOrder(state),
+    };
+
+    const current = state.assignments[targetStreamerId] || [];
+    state.assignments[targetStreamerId] = current.includes(newId) ? current : [...current, newId];
+
+    await setTagState(state);
+    return { tagState: state, tagId: newId };
+  });
+}
+
+/**
  * Delete a tag and remove its assignments from all streamers.
  * @param {string|number} tagId
  * @returns {Promise<{tags: object, assignments: object, nextId: number}>}

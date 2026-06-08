@@ -27,6 +27,7 @@ import {
   resetTagStateToDefault,
   reorderTags,
   normalizeTagState,
+  createAndAssignTag,
 } from '../src/background/tagState.js';
 import { handleExport, handleImport } from '../src/background/importExport.js';
 import { getDashboardPayload } from '../src/background/payload.js';
@@ -140,6 +141,15 @@ const handlers = {
   async 'tag:create'(message) {
     const state = await upsertTag({ name: message.name, color: message.color });
     return { tagState: state };
+  },
+
+  async 'tag:create-and-assign'(message) {
+    const result = await createAndAssignTag(
+      { name: message.name, color: message.color },
+      message.streamerId,
+    );
+    await syncLiveAssignments(result.tagState.assignments, { changedStreamerId: message.streamerId });
+    return result;
   },
 
   async 'tag:update'(message) {

@@ -68,6 +68,7 @@
   // Constants
   const STARRED_TAG_ID = 'favorite';
   const DEFAULT_TAG_COLOR = '#6f42c1';
+  const DEFAULT_TAG_STATE = Object.freeze({ tags: {}, assignments: {}, nextId: 1 });
   const DEBOUNCE_DELAY = 300;
   const CHECK_INTERVAL = 500; // Check for UI injection points
   const FOLLOW_STATE_RECOVERY_COOLDOWN = 3000;
@@ -341,8 +342,36 @@
    * Track an event listener for later cleanup
    */
   function trackEventListener(target, type, listener, options) {
-    eventListeners.push({ target, type, listener, options });
+    const entry = { target, type, listener, options };
+    eventListeners.push(entry);
     target.addEventListener(type, listener, options);
+    return () => {
+      target.removeEventListener(type, listener, options);
+      const index = eventListeners.indexOf(entry);
+      if (index !== -1) {
+        eventListeners.splice(index, 1);
+      }
+    };
+  }
+
+  function trackTagsSectionEventListener(section, target, type, listener, options) {
+    const cleanupListener = trackEventListener(target, type, listener, options);
+    if (!Array.isArray(section.__ttaggerCleanups)) {
+      section.__ttaggerCleanups = [];
+    }
+    section.__ttaggerCleanups.push(cleanupListener);
+  }
+
+  function cleanupTagsSection(section) {
+    const cleanups = Array.isArray(section?.__ttaggerCleanups) ? section.__ttaggerCleanups : [];
+    while (cleanups.length) {
+      const cleanupListener = cleanups.pop();
+      try {
+        cleanupListener();
+      } catch (error) {
+        console.warn('[TTagger] Failed to clean up tag section listener:', error);
+      }
+    }
   }
 
   /**
@@ -401,13 +430,34 @@
     try {
       debug('Fetching tag state...');
       const result = await chrome.storage.sync.get('tagState');
-      tagState = result.tagState || { tags: {}, assignments: {}, nextId: 1 };
+      tagState = result.tagState || { ...DEFAULT_TAG_STATE };
       debug('Tag state loaded:', Object.keys(tagState.tags || {}).length, 'tags');
       return tagState;
     } catch (error) {
       console.error('[TTagger] Error fetching tag state:', error);
-      return { tags: {}, assignments: {}, nextId: 1 };
+      return { ...DEFAULT_TAG_STATE };
     }
+  }
+
+  function getTagDefinitionsSignature(stateSnapshot) {
+    const tags = stateSnapshot?.tags || {};
+    return JSON.stringify(
+      Object.keys(tags)
+        .sort()
+        .map((id) => {
+          const tag = tags[id] || {};
+          return [
+            String(id),
+            tag.name || '',
+            normalizeHexColor(tag.color, ''),
+            Number(tag.sortOrder) || 0,
+          ];
+        }),
+    );
+  }
+
+  function haveTagDefinitionsChanged(previous, next) {
+    return getTagDefinitionsSignature(previous) !== getTagDefinitionsSignature(next);
   }
 
   /**
@@ -701,31 +751,20 @@
       cancelBtn.disabled = true;
 
       try {
-        // Create the tag via background script
+        if (!currentStreamerId) {
+          throw new Error(t('content_error_create_tag'));
+        }
+
+        // Create and assign the tag via one background mutation so other views
+        // never see an intermediate unassigned state.
         const response = await chrome.runtime.sendMessage({
-          type: 'tag:create',
-          name: tagName
+          type: 'tag:create-and-assign',
+          name: tagName,
+          streamerId: currentStreamerId
         });
 
         if (response.ok && response.data?.tagState) {
-          // Update local tag state
-          await fetchTagState();
-
-          // Find the newly created tag
-          const newTagId = Object.keys(response.data.tagState.tags).find(id => {
-            return response.data.tagState.tags[id].name === tagName;
-          });
-
-          // Automatically assign the new tag to current streamer
-          if (newTagId && currentStreamerId) {
-            await chrome.runtime.sendMessage({
-              type: 'tag:assign',
-              streamerId: currentStreamerId,
-              tagId: newTagId,
-              assign: true
-            });
-            await fetchTagState();
-          }
+          tagState = response.data.tagState;
 
           // Close form and refresh UI
           dropdownMenu.style.display = 'none';
@@ -972,7 +1011,7 @@
       closeDropdown();
     };
 
-    trackEventListener(document, 'click', handleOutsideClick, true);
+    trackTagsSectionEventListener(section, document, 'click', handleOutsideClick, true);
 
     // Reposition dropdown on scroll/resize
     const repositionOnScroll = () => {
@@ -981,8 +1020,8 @@
       }
     };
 
-    trackEventListener(window, 'scroll', repositionOnScroll, true);
-    trackEventListener(window, 'resize', repositionOnScroll);
+    trackTagsSectionEventListener(section, window, 'scroll', repositionOnScroll, true);
+    trackTagsSectionEventListener(section, window, 'resize', repositionOnScroll);
 
     tagsContainer.appendChild(dropdownBtn);
     section.appendChild(tagsContainer);
@@ -1019,12 +1058,10 @@
     const parent = existingSection.parentElement;
     if (!parent) return;
 
-    // Remove old section
-    existingSection.remove();
+    cleanupTagsSection(existingSection);
 
-    // Create and insert new section
     const newSection = createTagsSection();
-    parent.appendChild(newSection);
+    parent.replaceChild(newSection, existingSection);
   }
 
   /**
@@ -1447,9 +1484,14 @@
     const listener = async (changes, areaName) => {
       if (areaName === 'sync') {
         if (changes.tagState) {
-          await fetchTagState();
+          const previousTagState = tagState;
+          tagState = changes.tagState.newValue || { ...DEFAULT_TAG_STATE };
           updateStarButton();
-          updateTagsSection();
+          if (haveTagDefinitionsChanged(previousTagState, tagState)) {
+            rebuildTagsSection();
+          } else {
+            updateTagsSection();
+          }
         }
 
         if (changes.preferences) {

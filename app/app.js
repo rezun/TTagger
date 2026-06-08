@@ -1,10 +1,17 @@
-import { addRuntimeListener, invoke, extension } from '../src/util/extension.js';
+import {
+  addRuntimeListener,
+  addStorageListener,
+  removeStorageListener,
+  invoke,
+  extension,
+} from '../src/util/extension.js';
 import { handleUserError } from '../src/util/errors.js';
 import { resolveTagColor } from '../src/util/formatters.js';
 import { DASHBOARD_REFRESH_INTERVAL_MS } from '../src/config.js';
 import { localize, getMessageStrict, setLanguageOverride } from '../src/util/i18n.js';
 import {
   TAG_STARRED,
+  TAG_UNTAGGED,
   TAG_ALL,
   THEME_SYSTEM,
   THEME_DARK,
@@ -84,6 +91,7 @@ let isMoveMode = false;
 let autoRefreshInterval = null;
 let isTagOperationInProgress = false;
 let updatedLabelInterval = null;
+let tagStateStorageListener = null;
 
 /**
  * Debounce a function to reduce the frequency of calls
@@ -101,6 +109,48 @@ function debounce(func, delay) {
       func.apply(this, args);
     }, delay);
   };
+}
+
+function isSelectedTagAvailable(tagId, tagState = state.tagState) {
+  if (tagId == null) {
+    return true;
+  }
+
+  const key = String(tagId);
+  return key === TAG_UNTAGGED || key === TAG_STARRED || !!tagState?.tags?.[key];
+}
+
+function reconcileSelectedTag({ persist = false } = {}) {
+  if (isSelectedTagAvailable(state.preferences.selectedTagId)) {
+    return false;
+  }
+
+  mergePreferences({ selectedTagId: TAG_ALL });
+  if (persist) {
+    queuePreferenceSync();
+  }
+  return true;
+}
+
+function applyTagStateUpdate(tagState, {
+  renderNow = true,
+  closeMenus = true,
+  persistInvalidSelection = true,
+} = {}) {
+  if (!tagState) {
+    return;
+  }
+
+  setTagState(tagState);
+  reconcileSelectedTag({ persist: persistInvalidSelection });
+
+  if (closeMenus) {
+    closeOpenMenus();
+  }
+
+  if (renderNow) {
+    render();
+  }
 }
 
 /**
@@ -644,8 +694,7 @@ async function promptRenameTag(tagId, currentName) {
   await withTagOperationLoading(async () => {
     try {
       const data = await invoke('tag:update', { tagId, name: nextName });
-      setTagState(data.tagState);
-      render();
+      applyTagStateUpdate(data.tagState);
     } catch (error) {
       handleUserError(error, t('app_error_rename_tag'));
     }
@@ -682,8 +731,7 @@ async function promptUpdateTagColor(tagId, currentColor) {
         payload.name = tagRecord.name;
       }
       const data = await invoke('tag:update', payload);
-      setTagState(data.tagState);
-      render();
+      applyTagStateUpdate(data.tagState);
     } catch (error) {
       handleUserError(error, t('app_error_update_tag_color'));
     }
@@ -702,11 +750,7 @@ async function confirmDeleteTag(tagId, name) {
   await withTagOperationLoading(async () => {
     try {
       const data = await invoke('tag:remove', { tagId });
-      setTagState(data.tagState);
-      if (state.preferences.selectedTagId === tagId) {
-        mergePreferences({ selectedTagId: TAG_ALL });
-      }
-      render();
+      applyTagStateUpdate(data.tagState);
     } catch (error) {
       handleUserError(error, t('app_error_delete_tag'));
     }
@@ -831,8 +875,7 @@ function getRenderActions() {
               tagId: TAG_STARRED,
               assign: isFavorite,
             });
-            setTagState(data.tagState);
-            render();
+            applyTagStateUpdate(data.tagState);
             return true;
           } catch (error) {
             handleUserError(error, t('app_error_update_favorite'));
@@ -848,8 +891,7 @@ function getRenderActions() {
               tagId,
               assign,
             });
-            setTagState(data.tagState);
-            render();
+            applyTagStateUpdate(data.tagState);
             return true;
           } catch (error) {
             handleUserError(error, t('app_error_update_tag_assignment'));
@@ -879,8 +921,7 @@ async function persistTagOrder(tagIds) {
   await withTagOperationLoading(async () => {
     try {
       const data = await invoke('tag:reorder', { tagIds: filtered });
-      setTagState(data.tagState);
-      render();
+      applyTagStateUpdate(data.tagState);
     } catch (error) {
       handleUserError(error, t('app_error_reorder_tags'));
       render();
@@ -1003,11 +1044,16 @@ async function loadData(force = false) {
     setAuth(payload.auth || null);
     setFollows(payload.follows || []);
     if (payload.tagState) {
-      setTagState(payload.tagState);
+      applyTagStateUpdate(payload.tagState, {
+        renderNow: false,
+        closeMenus: false,
+        persistInvalidSelection: false,
+      });
     }
     if (payload.preferences) {
       applyPreferences(payload.preferences);
     }
+    reconcileSelectedTag({ persist: true });
     setFetchedAt(payload.fetchedAt || null);
     applyTheme(state.preferences.themeMode);
   } catch (error) {
@@ -1038,6 +1084,25 @@ function stopAutoRefresh() {
   }
 }
 
+function setupTagStateStorageListener() {
+  if (tagStateStorageListener) {
+    return;
+  }
+
+  tagStateStorageListener = (changes, areaName) => {
+    if (areaName !== 'sync' || !changes.tagState) {
+      return;
+    }
+
+    applyTagStateUpdate(changes.tagState.newValue, {
+      closeMenus: true,
+      persistInvalidSelection: true,
+    });
+  };
+
+  addStorageListener(tagStateStorageListener);
+}
+
 /**
  * Cleanup all timers and pending operations on shutdown
  */
@@ -1047,6 +1112,10 @@ function cleanup() {
   if (preferenceSyncHandle) {
     clearTimeout(preferenceSyncHandle);
     preferenceSyncHandle = null;
+  }
+  if (tagStateStorageListener) {
+    removeStorageListener(tagStateStorageListener);
+    tagStateStorageListener = null;
   }
 }
 
@@ -1202,8 +1271,7 @@ function attachEventHandlers() {
     await withTagOperationLoading(async () => {
       try {
         const data = await invoke('tag:create', { name });
-        setTagState(data.tagState);
-        render();
+        applyTagStateUpdate(data.tagState);
       } catch (error) {
         handleUserError(error, t('app_error_create_tag'));
       }
@@ -1232,6 +1300,7 @@ async function initialize() {
   applyPreferences(state.preferences);
   applyTheme(state.preferences.themeMode);
   attachEventHandlers();
+  setupTagStateStorageListener();
   startUpdatedLabelTimer();
   updateMoveButton();
 
