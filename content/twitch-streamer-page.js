@@ -106,8 +106,16 @@
     return !!document.querySelector('[data-ttagger-tags]');
   }
 
+  function getChannelFollowButton(target) {
+    // Twitch also renders follow controls in the About/Follower Goal panels.
+    // Only the channel header is an injection and follow-state anchor.
+    const header = document.querySelector('[data-target="channel-header-right"]')
+      || document.querySelector('#live-channel-stream-information');
+    return header?.querySelector(`[data-a-target="${target}"]`) || null;
+  }
+
   function hasTwitchUnfollowButton() {
-    return !!document.querySelector('[data-a-target="unfollow-button"]');
+    return !!getChannelFollowButton('unfollow-button');
   }
 
   /**
@@ -598,7 +606,8 @@
     debug('Creating star button. Starred:', starred);
 
     const button = document.createElement('button');
-    button.className = 'ScCoreButton-sc-ocjdkq-0 yezmM ttagger-star-button';
+    button.type = 'button';
+    button.className = 'ttagger-star-button';
     button.setAttribute('data-ttagger-star', '');
     const addStarLabel = t('content_add_to_starred');
     const removeStarLabel = t('content_remove_from_starred');
@@ -609,24 +618,11 @@
       button.classList.add('is-starred');
     }
     button.dataset.ttaggerStarred = starred ? 'true' : 'false';
+    button.setAttribute('aria-pressed', String(starred));
 
-    const labelWrapper = document.createElement('div');
-    labelWrapper.className = 'ScCoreButtonLabel-sc-s7h2b7-0 OyGFd';
-    const labelText = document.createElement('div');
-    labelText.dataset.aTarget = 'tw-core-button-label-text';
-    labelText.className = 'Layout-sc-1xcs6mc-0 iBachR';
-    const layout = document.createElement('div');
-    layout.className = 'Layout-sc-1xcs6mc-0 ceVcik';
-    const injectLayout = document.createElement('div');
-    injectLayout.className = 'InjectLayout-sc-1i43xsx-0 iDMNUO';
-    const iconWrapper = document.createElement('div');
-    iconWrapper.className = 'ScSvgWrapper-sc-wkgzod-0 dVDUDh tw-svg ttagger-star-icon';
-    iconWrapper.appendChild(createSvgIcon('24', '24', '0 0 90 90', STAR_SVG_PATH));
-    injectLayout.appendChild(iconWrapper);
-    layout.appendChild(injectLayout);
-    labelText.appendChild(layout);
-    labelWrapper.appendChild(labelText);
-    button.appendChild(labelWrapper);
+    // Own the button markup and styles: Twitch's generated classes change
+    // between releases and can no longer provide a reliable button appearance.
+    button.appendChild(createSvgIcon('24', '24', '0 0 90 90', STAR_SVG_PATH));
 
     button.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -647,7 +643,15 @@
    * @returns {HTMLElement|null}
    */
   function findFollowButtonGroup(followButton) {
+    const actionRow = followButton.closest('[data-target="channel-header-right"]');
     let current = followButton.parentElement;
+
+    if (actionRow) {
+      while (current && current.parentElement !== actionRow) {
+        current = current.parentElement;
+      }
+      return current;
+    }
 
     while (current && current.parentElement) {
       const parent = current.parentElement;
@@ -1045,6 +1049,7 @@
 
     button.classList.toggle('is-starred', starred);
     button.dataset.ttaggerStarred = starred ? 'true' : 'false';
+    button.setAttribute('aria-pressed', String(starred));
   }
 
   /**
@@ -1194,7 +1199,7 @@
 
     // Find the button container next to unfollow button
     debug('Looking for unfollow button...');
-    const unfollowButton = document.querySelector('[data-a-target="unfollow-button"]');
+    const unfollowButton = getChannelFollowButton('unfollow-button');
     if (!unfollowButton) {
       debug('Unfollow button not found during inject attempt');
       return;
@@ -1306,7 +1311,7 @@
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
 
         // Check if we now have an unfollow button (meaning user just followed)
-        const unfollowButton = document.querySelector('[data-a-target="unfollow-button"]');
+        const unfollowButton = getChannelFollowButton('unfollow-button');
         if (unfollowButton && !isFollowed) {
           debug('User just followed streamer, adding to cache...');
           detected = true;
@@ -1364,7 +1369,7 @@
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
 
       // Check if we now have a follow button (meaning user just unfollowed)
-      const followButton = document.querySelector('[data-a-target="follow-button"]');
+      const followButton = getChannelFollowButton('follow-button');
       if (followButton && isFollowed) {
         debug('User confirmed unfollow, removing from cache...');
         detected = true;
